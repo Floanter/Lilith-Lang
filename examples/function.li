@@ -1,14 +1,10 @@
 void main -> ()
-    number age -> 20;
+    int age -> 20;
     const string name -> "Brian";
     bool pass -> true;
 
     number sum -> age + 1;
 
-    if age == sum then
-        pass;
-    end
-
-
+    shared float version -> 2.0; 
 
 end

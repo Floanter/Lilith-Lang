@@ -1,18 +1,16 @@
 start               : block+
 
 block               : assign
-                    | conditional
                     | "pass" ";"
 
 
 assign              : type identifier "->" "(" ")" block+ "end" -> function
                     | type identifier "->" value ";" -> variable
                     | "const" type identifier "->" value ";" -> constvariable
+                    | "shared" type identifier "->" value ";" -> sharedvariable
 
-conditional         : "if" value (operator value)+ "then" block+ "end"
-
-identifier          : WORD -> identifier
-type                : WORD -> type
+identifier          : CNAME -> identifier
+type                : CNAME -> type
 
 value               : string
                     | number
@@ -41,7 +39,7 @@ COMMENT             : "--" /[^\n]/*
 %import common.SIGNED_NUMBER
 %import common.SIGNED_FLOAT
 %import common.ESCAPED_STRING
-%import common.WORD
+%import common.CNAME
 %import common.WS
 
 %ignore COMMENT
