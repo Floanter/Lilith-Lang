@@ -4,13 +4,24 @@ block               : assign
                     | "pass" ";"
 
 
-assign              : type identifier "->" "(" ")" block+ "end" -> function
+assign              : "void" "main" "->" "(" arguments ")" block+ "end" -> mainfunction
+                    | type identifier "->" "(" arguments ")" block+ "end" -> function
                     | type identifier "->" value ";" -> variable
                     | "const" type identifier "->" value ";" -> constvariable
                     | "shared" type identifier "->" value ";" -> sharedvariable
+                    | "shared" "const" type identifier "->" value ";" -> sharedconstvariable
 
-identifier          : CNAME -> identifier
-type                : CNAME -> type
+arguments           : argument ("," argument)*
+
+argument            : type identifier
+                    | type identifier "->" value -> argumentdefault
+
+
+identifier          : /[\*\&\_][a-zA-Z0-9]*/
+                    | CNAME
+
+type                : "list" "<" CNAME ">" -> typelist
+                    | CNAME -> type
 
 value               : string
                     | number
