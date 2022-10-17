@@ -1,13 +1,17 @@
-void main -> ()
-    int age -> 20;
+void main ->
+    int age = 20;
 
-    const string name -> 'Brian';
+    age += 1 + 2;
 
-    bool pass -> true;
+    age--;
 
-    number sum -> age + 1;
+    const string name = 'Brian';
 
-    shared float version -> 2.0; 
+    bool pass = true;
 
-    shared const char letter -> "s";
+    number sum = age + 1;
+
+    shared float version = 2.0; 
+
+    shared const char letter = "s";
 end

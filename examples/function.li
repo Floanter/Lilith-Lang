@@ -1,3 +1,12 @@
-void main -> (int argc, char[] *argv)
+void noHagoNada -> 
     pass;
+end
+
+int suma -> (int x, int y)
+    return x + y;
+end
+
+void main -> 
+    noHagoNada!;
+    suma 1, 2;
 end

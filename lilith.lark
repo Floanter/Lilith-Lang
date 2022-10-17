@@ -1,27 +1,46 @@
 start               : block+
 
-block               : assign
+block               : return
+                    | call
+                    | assign
                     | "pass" ";"
 
+return              : "return" value ";"
 
-assign              : "void" "main" "->" "(" arguments ")" block+ "end" -> mainfunction
-                    | type identifier "->" "(" arguments ")" block+ "end" -> function
-                    | type identifier "->" value ";" -> variable
-                    | "const" type identifier "->" value ";" -> constvariable
-                    | "shared" type identifier "->" value ";" -> sharedvariable
-                    | "shared" "const" type identifier "->" value ";" -> sharedconstvariable
+call                : identifier "!" ";" -> callnoparams
+                    | identifier parameters ";" -> callwithparams   
+
+assign              : "void" "main" "->" block+ "end" -> mainfunction
+                    | type identifier "->" block+ "end" -> functionnoarguments
+                    | type identifier "->" "(" arguments ")" block+ "end" -> functionwitharguments
+                    | identifier "+" "+" ";" -> variableincrement
+                    | identifier "-" "-" ";" -> variabledecrement
+                    | identifier assignoperator value ";" -> reasignvariable
+                    | type identifier "=" value ";" -> variable
+                    | "const" type identifier "=" value ";" -> constvariable
+                    | "shared" type identifier "=" value ";" -> sharedvariable
+                    | "shared" "const" type identifier "=" value ";" -> sharedconstvariable
+
+assignoperator      : "=" -> equals
+                    | "+=" -> plusequals
+                    | "-=" -> lessequals
+                    | "*=" -> multiequals
+                    | "/=" -> divideequals
+                    | "%=" -> modulusequals
+
+parameters          : value ("," value)*
 
 arguments           : argument ("," argument)*
 
-argument            : type identifier
+argument            : "void"
+                    | type identifier
                     | type identifier "->" value -> argumentdefault
 
 
-identifier          : /[\*\&\_][a-zA-Z0-9]*/
+identifier          : /[\&\_][a-zA-Z0-9]*/
                     | CNAME
 
-type                : "list" "<" CNAME ">" -> typelist
-                    | CNAME -> type
+type                : /[a-zA-Z0-9]+[\*]?/ -> type
 
 value               : string
                     | number
@@ -35,6 +54,7 @@ arithmeticsign      : "+" -> plus
                     | "-" -> minus
                     | "/" -> divide
                     | "*" -> multiply
+                    | "%" -> modulus
 
 string              : /\'.*\'/ 
                     | /\".*\"/
