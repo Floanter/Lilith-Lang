@@ -8,5 +8,5 @@ end
 
 void main -> 
     noHagoNada!;
-    suma 1, 2;
+    suma(1, 2);
 end

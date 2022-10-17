@@ -1,14 +1,16 @@
 start               : block+
 
 block               : return
-                    | call
+                    | calls
                     | assign
                     | "pass" ";"
 
 return              : "return" value ";"
 
-call                : identifier "!" ";" -> callnoparams
-                    | identifier parameters ";" -> callwithparams   
+calls               : call ("." call)* ";"
+
+call                : identifier "!" -> callnoparams
+                    | identifier "(" parameters ")" -> callwithparams
 
 assign              : "void" "main" "->" block+ "end" -> mainfunction
                     | type identifier "->" block+ "end" -> functionnoarguments
