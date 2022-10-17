@@ -5,8 +5,6 @@ void main ->
 
     age--;
 
-    const string name = 'Brian';
-
     bool pass = true;
 
     number sum = age + 1;
@@ -14,4 +12,6 @@ void main ->
     shared float version = 2.0; 
 
     shared const char letter = "s";
+
+    list<char> 
 end

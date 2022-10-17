@@ -18,7 +18,8 @@ assign              : "void" "main" "->" block+ "end" -> mainfunction
                     | identifier "+" "+" ";" -> variableincrement
                     | identifier "-" "-" ";" -> variabledecrement
                     | identifier assignoperator value ";" -> reasignvariable
-                    | type identifier "=" value ";" -> variable
+                    | type identifier ";" -> declarationvariable
+                    | type identifier "=" value ";" -> assingvariable
                     | "const" type identifier "=" value ";" -> constvariable
                     | "shared" type identifier "=" value ";" -> sharedvariable
                     | "shared" "const" type identifier "=" value ";" -> sharedconstvariable
@@ -39,10 +40,13 @@ argument            : "void"
                     | type identifier "->" value -> argumentdefault
 
 
-identifier          : /[\&\_][a-zA-Z0-9]*/
+identifier          : /[\&\_][a-zA-Z0-9]*/ "[" SIGNED_NUMBER "]" -> identifierlist
+                    | /[\&\_][a-zA-Z0-9]*/
                     | CNAME
 
 type                : /[a-zA-Z0-9]+[\*]?/ -> type
+                    | "list" "<" type ">" -> listtype
+                    | "list" "<" type ">" "*" -> listpointertype
 
 value               : string
                     | number
