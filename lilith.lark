@@ -1,11 +1,17 @@
 start               : block+
 
 block               : return
+                    | conditional
                     | calls
                     | assign
                     | "pass" ";"
 
 return              : "return" value ";"
+
+conditional         : "if" condition (logicaloperator condition)* "then" block+ "end"                    -> ifcondition
+                    | "if" condition (logicaloperator condition)* "then" block+ "else" block+ "end"      -> ifelsecondition
+                    | "unless" condition (logicaloperator condition)* "then" block+ "end"                -> unlesscondition
+                    | "unless" condition (logicaloperator condition)* "then" block+ "else" block+ "end"  -> unlesselsecondition
 
 calls               : call ("." call)* ";"
 
@@ -15,21 +21,41 @@ call                : identifier "!" -> callnoparams
 assign              : "void" "main" "->" block+ "end" -> mainfunction
                     | type identifier "->" block+ "end" -> functionnoarguments
                     | type identifier "->" "(" arguments ")" block+ "end" -> functionwitharguments
+                    | identifier arrayposition+ "+" "+" ";" -> arrayvariableincrement
+                    | identifier arrayposition+ "-" "-" ";" -> arrayvariabledecrement
                     | identifier "+" "+" ";" -> variableincrement
                     | identifier "-" "-" ";" -> variabledecrement
-                    | identifier assignoperator value ";" -> reasignvariable
-                    | type identifier ";" -> declarationvariable
-                    | type identifier "=" value ";" -> assingvariable
+                    | identifier arrayposition+ assignoperator value ";" -> arrayvariablereasign
+                    | identifier assignoperator value ";" -> variablereasign
+                    | "array" "<" type ">" identifier "=" "[" value ("," value)* "]" ";" -> arrayvariableassign
+                    | "array" "<" type ">" identifier arrayposition+ ";" -> variabledeclaration
+                    | type identifier ";" -> variabledeclaration
+                    | type identifier "=" value ";" -> variableassing
                     | "const" type identifier "=" value ";" -> constvariable
                     | "shared" type identifier "=" value ";" -> sharedvariable
                     | "shared" "const" type identifier "=" value ";" -> sharedconstvariable
 
-assignoperator      : "=" -> equals
-                    | "+=" -> plusequals
-                    | "-=" -> lessequals
-                    | "*=" -> multiequals
-                    | "/=" -> divideequals
-                    | "%=" -> modulusequals
+arrayposition       :  "[" number "]"
+
+condition           : value comparisonoperator value
+                    | value
+
+assignoperator      : /\=/
+                    | /\+\=/
+                    | /\-\=/
+                    | /\*\=/
+                    | /\/\=/
+                    | /\%\=/
+
+comparisonoperator  : /is/      
+                    | /not/      
+                    | /greater/  
+                    | /less/     
+                    | /\>\=/    
+                    | /\<\=/     
+
+logicaloperator     : /and/
+                    | /or/
 
 parameters          : value ("," value)*
 
@@ -37,30 +63,29 @@ arguments           : argument ("," argument)*
 
 argument            : "void"
                     | type identifier
-                    | type identifier "->" value -> argumentdefault
+                    | type identifier "=" value -> argumentdefault
+                    | "array" "<" type ">" identifier -> arrayargument
 
 
-identifier          : /[\&\_][a-zA-Z0-9]*/ "[" SIGNED_NUMBER "]" -> identifierlist
-                    | /[\&\_][a-zA-Z0-9]*/
+identifier          : /[\&\_][a-zA-Z0-9]*/
                     | CNAME
 
 type                : /[a-zA-Z0-9]+[\*]?/ -> type
-                    | "list" "<" type ">" -> listtype
-                    | "list" "<" type ">" "*" -> listpointertype
 
 value               : string
                     | number
                     | bool
                     | arithmetic
+                    | calls
                     | identifier
 
 arithmetic          : value (arithmeticsign value)+
 
-arithmeticsign      : "+" -> plus
-                    | "-" -> minus
-                    | "/" -> divide
-                    | "*" -> multiply
-                    | "%" -> modulus
+arithmeticsign      : /\+/
+                    | /\-/ 
+                    | /\//
+                    | /\*/ 
+                    | /\%/ 
 
 string              : /\'.*\'/ 
                     | /\".*\"/

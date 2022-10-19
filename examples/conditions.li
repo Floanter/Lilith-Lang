@@ -1,15 +1,25 @@
 void main -> 
-    if x == y or 1 < 2 then
+    if x is y or 1 less 2 then
         pass;
     end
 
-    if x != y and z > 0 then
+    if x not y and z greater 0 then
         pass;
+    end
+
+    if canPass then
+        uno!;
+    else
+        dos!;
     end
 
     unless canPass then
         pass;
+    end
+
+    unless canPass then
+        go!;
     else
-        pass;
+        notgo!;
     end
 end
