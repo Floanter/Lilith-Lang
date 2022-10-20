@@ -22,4 +22,13 @@ void main ->
     else
         notgo!;
     end
+
+    switch day 
+        when 1:
+            do!;
+            done;
+        default:
+            notdo!;
+    end
+
 end

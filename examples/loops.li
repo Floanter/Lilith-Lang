@@ -1,0 +1,12 @@
+void main ->
+    while run do
+        empty;
+    end
+
+    for number i = 0; i less 10; i++; do
+        if i is 4 then
+            run!;
+            done;
+        end
+    end
+end

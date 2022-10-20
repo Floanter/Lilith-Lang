@@ -2,38 +2,50 @@ start               : block+
 
 block               : return
                     | conditional
+                    | loop
                     | calls
-                    | assign
-                    | "pass" ";"
+                    | assign 
+                    | /empty/ ";"   -> empty
 
 return              : "return" value ";"
 
-conditional         : "if" condition (logicaloperator condition)* "then" block+ "end"                    -> ifcondition
-                    | "if" condition (logicaloperator condition)* "then" block+ "else" block+ "end"      -> ifelsecondition
-                    | "unless" condition (logicaloperator condition)* "then" block+ "end"                -> unlesscondition
-                    | "unless" condition (logicaloperator condition)* "then" block+ "else" block+ "end"  -> unlesselsecondition
+conditional         : "if" condition (logicaloperator condition)* "then" (block | specialword)+ "end"                                   -> ifcondition
+                    | "if" condition (logicaloperator condition)* "then" (block | specialword)+ "else" (block | specialword)+ "end"     -> ifelsecondition
+                    | "unless" condition (logicaloperator condition)* "then" (block | specialword)+ "end"                               -> unlesscondition
+                    | "unless" condition (logicaloperator condition)* "then" (block | specialword)+ "else" (block | specialword)+ "end" -> unlesselsecondition
+                    | "switch" value whenstatement* defaultstatement "end"                                                              -> switchcondition
+
+specialword         : /done/ ";"    -> break
+                    | /skip/ ";"    -> continue
+
+loop                : "while" condition (logicaloperator condition)* "do" block+ "end"  -> whileloop
+                    | "for" assign condition ";" assign "do" block+ "end"               -> forloop
 
 calls               : call ("." call)* ";"
 
-call                : identifier "!" -> callnoparams
-                    | identifier "(" parameters ")" -> callwithparams
+call                : identifier "!"                    -> callnoparams
+                    | identifier "(" parameters ")"     -> callwithparams
 
-assign              : "void" "main" "->" block+ "end" -> mainfunction
-                    | type identifier "->" block+ "end" -> functionnoarguments
-                    | type identifier "->" "(" arguments ")" block+ "end" -> functionwitharguments
-                    | identifier arrayposition+ "+" "+" ";" -> arrayvariableincrement
-                    | identifier arrayposition+ "-" "-" ";" -> arrayvariabledecrement
-                    | identifier "+" "+" ";" -> variableincrement
-                    | identifier "-" "-" ";" -> variabledecrement
-                    | identifier arrayposition+ assignoperator value ";" -> arrayvariablereasign
-                    | identifier assignoperator value ";" -> variablereasign
-                    | "array" "<" type ">" identifier "=" "[" value ("," value)* "]" ";" -> arrayvariableassign
-                    | "array" "<" type ">" identifier arrayposition+ ";" -> variabledeclaration
-                    | type identifier ";" -> variabledeclaration
-                    | type identifier "=" value ";" -> variableassing
-                    | "const" type identifier "=" value ";" -> constvariable
-                    | "shared" type identifier "=" value ";" -> sharedvariable
-                    | "shared" "const" type identifier "=" value ";" -> sharedconstvariable
+assign              : "void" "main" "->" block+ "end"                                           -> mainfunction
+                    | type identifier "->" block+ "end"                                         -> functionnoarguments
+                    | type identifier "->" "(" arguments ")" block+ "end"                       -> functionwitharguments
+                    | identifier arrayposition+ "+" "+" ";"                                     -> arrayvariableincrement
+                    | identifier arrayposition+ "-" "-" ";"                                     -> arrayvariabledecrement
+                    | identifier "+" "+" ";"                                                    -> variableincrement
+                    | identifier "-" "-" ";"                                                    -> variabledecrement
+                    | identifier arrayposition+ assignoperator value ";"                        -> arrayvariablereasign
+                    | identifier assignoperator value ";"                                       -> variablereasign
+                    | "array" "<" type ">" identifier "=" "[" value ("," value)* "]" ";"        -> arrayvariableassign
+                    | "array" "<" type ">" identifier arrayposition+ ";"                        -> variabledeclaration
+                    | type identifier ";"                                                       -> variabledeclaration
+                    | type identifier "=" value ";"                                             -> variableassing
+                    | "const" type identifier "=" value ";"                                     -> constvariable
+                    | "shared" type identifier "=" value ";"                                    -> sharedvariable
+                    | "shared" "const" type identifier "=" value ";"                            -> sharedconstvariable
+
+whenstatement       : "when" value ":" block+ "done" ";"
+
+defaultstatement    : "default" ":" block+ 
 
 arrayposition       :  "[" number "]"
 
@@ -61,10 +73,10 @@ parameters          : value ("," value)*
 
 arguments           : argument ("," argument)*
 
-argument            : "void"
+argument            : /void/
                     | type identifier
-                    | type identifier "=" value -> argumentdefault
-                    | "array" "<" type ">" identifier -> arrayargument
+                    | type identifier "=" value         -> argumentdefault
+                    | "array" "<" type ">" identifier   -> arrayargument
 
 
 identifier          : /[\&\_][a-zA-Z0-9]*/
