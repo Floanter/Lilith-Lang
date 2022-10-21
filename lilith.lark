@@ -1,6 +1,9 @@
-start               : block+
+start               : file
 
-block               : import
+file                : block+
+
+block               : compiler
+                    | import
                     | c_import
                     | return
                     | macro
@@ -11,11 +14,16 @@ block               : import
                     | assign 
                     | /empty/ ";"   -> empty
 
-import              : "spell" string ";"             -> getspell
-                    | "spell" "<" identifier ">" ";" -> getlibspell
+compiler            : "COMPILE_ME_AS_HEADER!"           -> compile_as_header
+                    | "COMPILE_ME_AS_STATIC_LIBRARY!"   -> compile_as_static_library
+                    | "COMPILE_ME_AS_SHARED_LIBRARY!"   -> compile_as_shared_library
 
-c_import            : "c_header" string ";"     -> c_header
-                    | "c_lib" "<" identifier ">" ";"    -> c_lib
+import              : "!spell" string ";"               -> getspell
+                    | "!spell" "<" identifier ">" ";"   -> getlibspell
+                    | "!spell_lib" string ";"           -> getlibrary
+
+c_import            : "!c_header" string ";"                -> c_header
+                    | "!c_header" "<" identifier ">" ";"    -> c_lib_header
 
 return              : "return" value ";"
 
