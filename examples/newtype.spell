@@ -1,0 +1,5 @@
+void main ->
+    newtype int ID;
+
+    ID newId = 10;
+end

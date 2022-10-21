@@ -1,0 +1,5 @@
+spell<io>;
+spell "src/foo";
+
+c_header "headers/foo";
+c_lib<stdio>;

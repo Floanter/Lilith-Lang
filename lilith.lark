@@ -1,13 +1,26 @@
 start               : block+
 
-block               : return
+block               : import
+                    | c_import
+                    | return
+                    | macro
                     | conditional
                     | loop
+                    | struct
                     | calls
                     | assign 
                     | /empty/ ";"   -> empty
 
+import              : "spell" string ";"             -> getspell
+                    | "spell" "<" identifier ">" ";" -> getlibspell
+
+c_import            : "c_header" string ";"     -> c_header
+                    | "c_lib" "<" identifier ">" ";"    -> c_lib
+
 return              : "return" value ";"
+
+macro               : "newmacro" identifier value "end" -> inlinemacro
+                    | "newmacro" identifier "(" value ")" "do" block+ "end" -> fullmacro
 
 conditional         : "if" condition (logicaloperator condition)* "then" (block | specialword)+ "end"                                   -> ifcondition
                     | "if" condition (logicaloperator condition)* "then" (block | specialword)+ "else" (block | specialword)+ "end"     -> ifelsecondition
@@ -21,6 +34,8 @@ specialword         : /done/ ";"    -> break
 loop                : "while" condition (logicaloperator condition)* "do" block+ "end"  -> whileloop
                     | "for" assign condition ";" assign "do" block+ "end"               -> forloop
 
+struct              : "struct" identifier assign+ "end"
+
 calls               : call ("." call)* ";"
 
 call                : identifier "!"                    -> callnoparams
@@ -29,6 +44,8 @@ call                : identifier "!"                    -> callnoparams
 assign              : "void" "main" "->" block+ "end"                                           -> mainfunction
                     | type identifier "->" block+ "end"                                         -> functionnoarguments
                     | type identifier "->" "(" arguments ")" block+ "end"                       -> functionwitharguments
+                    | "newtype" type identifier ";"                                             -> typedef
+                    | identifier ("." assign)+                                                  -> structvariableaccess
                     | identifier arrayposition+ "+" "+" ";"                                     -> arrayvariableincrement
                     | identifier arrayposition+ "-" "-" ";"                                     -> arrayvariabledecrement
                     | identifier "+" "+" ";"                                                    -> variableincrement
