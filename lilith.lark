@@ -27,20 +27,20 @@ c_import            : "!c_header" string ";"                -> c_header
 
 return              : "return" value ";"
 
-macro               : "newmacro" identifier value "end" -> inlinemacro
-                    | "newmacro" identifier "(" value ")" "do" block+ "end" -> fullmacro
+macro               : "newmacro" identifier value "end" -> inline_macro
+                    | "newmacro" identifier "(" value ")" "do" block+ "end" -> full_macro
 
-conditional         : "if" condition (logicaloperator condition)* "then" (block | specialword)+ "end"                                   -> ifcondition
-                    | "if" condition (logicaloperator condition)* "then" (block | specialword)+ "else" (block | specialword)+ "end"     -> ifelsecondition
-                    | "unless" condition (logicaloperator condition)* "then" (block | specialword)+ "end"                               -> unlesscondition
-                    | "unless" condition (logicaloperator condition)* "then" (block | specialword)+ "else" (block | specialword)+ "end" -> unlesselsecondition
-                    | "switch" value whenstatement* defaultstatement "end"                                                              -> switchcondition
+conditional         : "if" condition (logicaloperator condition)* "then" (block | specialword)+ "end"                                   -> if_condition
+                    | "if" condition (logicaloperator condition)* "then" (block | specialword)+ "else" (block | specialword)+ "end"     -> if_else_condition
+                    | "unless" condition (logicaloperator condition)* "then" (block | specialword)+ "end"                               -> unless_condition
+                    | "unless" condition (logicaloperator condition)* "then" (block | specialword)+ "else" (block | specialword)+ "end" -> unless_else_condition
+                    | "switch" value whenstatement* defaultstatement "end"                                                              -> switch_condition
 
 specialword         : /done/ ";"    -> break
                     | /skip/ ";"    -> continue
 
-loop                : "while" condition (logicaloperator condition)* "do" block+ "end"  -> whileloop
-                    | "for" assign condition ";" assign "do" block+ "end"               -> forloop
+loop                : "while" condition (logicaloperator condition)* "do" block+ "end"  -> while_loop
+                    | "for" assign condition ";" assign "do" block+ "end"               -> for_loop
 
 struct              : "struct" identifier assign+ "end"
 
@@ -49,24 +49,26 @@ calls               : call ("." call)* ";"
 call                : identifier "!"                    -> callnoparams
                     | identifier "(" parameters ")"     -> callwithparams
 
-assign              : "void" "main" "->" block+ "end"                                           -> mainfunction
-                    | type identifier "->" block+ "end"                                         -> functionnoarguments
-                    | type identifier "->" "(" arguments ")" block+ "end"                       -> functionwitharguments
+assign              : "void" "main" "->" block+ "end"                                           -> main_function
+                    | type identifier "->" block+ "end"                                         -> function_no_arguments
+                    | type identifier "->" "(" arguments ")" ";"                                -> function_declaration_arguments
+                    | type identifier "->" "(" arguments ")" block+ "end"                       -> function_with_arguments
                     | "newtype" type identifier ";"                                             -> typedef
-                    | identifier ("." assign)+                                                  -> structvariableaccess
-                    | identifier arrayposition+ "+" "+" ";"                                     -> arrayvariableincrement
-                    | identifier arrayposition+ "-" "-" ";"                                     -> arrayvariabledecrement
-                    | identifier "+" "+" ";"                                                    -> variableincrement
-                    | identifier "-" "-" ";"                                                    -> variabledecrement
-                    | identifier arrayposition+ assignoperator value ";"                        -> arrayvariablereasign
-                    | identifier assignoperator value ";"                                       -> variablereasign
-                    | "array" "<" type ">" identifier "=" "[" value ("," value)* "]" ";"        -> arrayvariableassign
-                    | "array" "<" type ">" identifier arrayposition+ ";"                        -> variabledeclaration
-                    | type identifier ";"                                                       -> variabledeclaration
-                    | type identifier "=" value ";"                                             -> variableassing
-                    | "const" type identifier "=" value ";"                                     -> constvariable
-                    | "shared" type identifier "=" value ";"                                    -> sharedvariable
-                    | "shared" "const" type identifier "=" value ";"                            -> sharedconstvariable
+                    | identifier ("." assign)+                                                  -> struct_variable_access
+                    | identifier (">" assign)+                                                  -> struct_pointer_access
+                    | identifier arrayposition+ "+" "+" ";"                                     -> array_variable_increment
+                    | identifier arrayposition+ "-" "-" ";"                                     -> array_variable_decrement
+                    | identifier "+" "+" ";"                                                    -> variable_increment
+                    | identifier "-" "-" ";"                                                    -> variable_decrement
+                    | identifier arrayposition+ assignoperator value ";"                        -> array_variable_reasign
+                    | identifier assignoperator value ";"                                       -> variable_reasign
+                    | "array" "<" type ">" identifier "=" "[" value ("," value)* "]" ";"        -> array_variable_assign
+                    | "array" "<" type ">" identifier arrayposition+ ";"                        -> array_variable_declaration
+                    | type identifier ";"                                                       -> variable_declaration
+                    | type identifier "=" value ";"                                             -> variable_assing
+                    | "const" type identifier "=" value ";"                                     -> const_variable
+                    | "shared" type identifier "=" value ";"                                    -> shared_variable
+                    | "shared" "const" type identifier "=" value ";"                            -> shared_const_variable
 
 whenstatement       : "when" value ":" block+ "done" ";"
 
@@ -100,8 +102,8 @@ arguments           : argument ("," argument)*
 
 argument            : /void/
                     | type identifier
-                    | type identifier "=" value         -> argumentdefault
-                    | "array" "<" type ">" identifier   -> arrayargument
+                    | type identifier "=" value         -> argument_default
+                    | "array" "<" type ">" identifier   -> array_argument
 
 
 identifier          : /[\&\_][a-zA-Z0-9]*/
@@ -109,11 +111,13 @@ identifier          : /[\&\_][a-zA-Z0-9]*/
 
 type                : /[a-zA-Z0-9]+[\*]?/ -> type
 
-value               : string
+value               : /none/ -> null
+                    | string
                     | number
                     | bool
                     | arithmetic
                     | calls
+                    | assign
                     | identifier
 
 arithmetic          : value (arithmeticsign value)+
