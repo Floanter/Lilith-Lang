@@ -4,5 +4,12 @@ function IDontDoAnything(void): void
 function sum(x: number, y: number): number
     pass;
 
+declare otherFunction(void): void;
+
 function main(argc: number, argv: string): void
     IDontDoAnything!;
+    sum(10, 20.5);
+    otherFunction!;
+
+function otherFunction(void): void 
+    pass;

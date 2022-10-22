@@ -2,15 +2,21 @@ start                       : _NL* file
 
 file                        : block+
 
-block                       : call semicolon _NL*
+block                       : return semicolon _NL*
+                            | call semicolon _NL*
                             | function _NL*
                             | "pass" ";" _NL*
+
+return                      : "return" value
 
 call                        : identifier "!"                -> call_no_params
                             | identifier "(" parameters ")" -> call_with_params
 
-function                    : "function" "main" "(" arguments ")" ":" type _NL+ [_INDENT block+ _DEDENT]      -> main_function
-                            | "function" identifier "(" arguments ")" ":" type _NL+ [_INDENT block+ _DEDENT]  -> function
+function                    : "function" "main" "(" arguments ")" ":" type _NL+ [_INDENT block+ _DEDENT]        -> main_function
+                            | "function" identifier "(" arguments ")" ":" type _NL+ [_INDENT block+ _DEDENT]    -> function
+                            | "declare" identifier "(" arguments ")" ":" type semicolon                          -> function_declare
+
+parameters                  : value ("," value)*
 
 assign_operator             : /\=/
                             | /\+\=/
@@ -24,19 +30,41 @@ arguments                   : "void" -> no_arguments
 
 argument                    : identifier ":" type   
 
-value                       : 
+value                       : string
+                            | number
+                            | bool
+                            | call 
+                            | arithmetic
+                            | identifier
 
-identifier                  : /[\&\_][\_a-zA-Z0-9]*/
+arithmetic                  : value (arithmetic_sign value)
+
+arithmetic_sign             : /\+/
+                            | /\-/ 
+                            | /\//
+                            | /\*/ 
+                            | /\%/ 
+
+identifier                  : /[\&][a-zA-Z0-9]*/
+                            | CNAME
 
 type                        : /[a-zA-Z0-9]+[\*]?/
 
 string                      : /\'.*\'/ -> apostrophe_string
                             | /\".*\"/ -> ellipsis_string
 
+number                      : SIGNED_NUMBER -> integer_number
+                            | SIGNED_FLOAT  -> float_number
+
+bool                        : /true/
+                            | /false/
+
 semicolon                   : ";"
 
 COMMENT             : "--" /[^\n]/*
 
+%import common.SIGNED_NUMBER
+%import common.SIGNED_FLOAT
 %import common.CNAME
 %import common.WS_INLINE
 %declare _INDENT _DEDENT
