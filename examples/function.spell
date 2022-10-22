@@ -1,12 +1,8 @@
-void noHagoNada -> 
+function IDontDoAnything(void): void
     pass;
-end
 
-int suma -> (int x, int y)
-    return x + y;
-end
+function sum(x: number, y: number): number
+    pass;
 
-void main -> 
-    noHagoNada!;
-    suma(1, 2);
-end
+function main(argc: number, argv: string): void
+    IDontDoAnything!;

@@ -1,149 +1,46 @@
-start               : file
+start                       : _NL* file
 
-file                : block+
+file                        : block+
 
-block               : compiler
-                    | import
-                    | c_import
-                    | return
-                    | macro
-                    | conditional
-                    | loop
-                    | struct
-                    | calls
-                    | assign 
-                    | /empty/ ";"   -> empty
+block                       : call semicolon _NL*
+                            | function _NL*
+                            | "pass" ";" _NL*
 
-compiler            : "COMPILE_ME_AS_HEADER!"           -> compile_as_header
-                    | "COMPILE_ME_AS_STATIC_LIBRARY!"   -> compile_as_static_library
-                    | "COMPILE_ME_AS_SHARED_LIBRARY!"   -> compile_as_shared_library
+call                        : identifier "!"                -> call_no_params
+                            | identifier "(" parameters ")" -> call_with_params
 
-import              : "!spell" string ";"               -> getspell
-                    | "!spell" "<" identifier ">" ";"   -> getlibspell
-                    | "!spell_lib" string ";"           -> getlibrary
+function                    : "function" "main" "(" arguments ")" ":" type _NL+ [_INDENT block+ _DEDENT]      -> main_function
+                            | "function" identifier "(" arguments ")" ":" type _NL+ [_INDENT block+ _DEDENT]  -> function
 
-c_import            : "!c_header" string ";"                -> c_header
-                    | "!c_header" "<" identifier ">" ";"    -> c_lib_header
+assign_operator             : /\=/
+                            | /\+\=/
+                            | /\-\=/
+                            | /\*\=/
+                            | /\/\=/
+                            | /\%\=/
 
-return              : "return" value ";"
+arguments                   : "void" -> no_arguments
+                            | argument ("," argument)*
 
-macro               : "newmacro" identifier value "end" -> inline_macro
-                    | "newmacro" identifier "(" value ")" "do" block+ "end" -> full_macro
+argument                    : identifier ":" type   
 
-conditional         : "if" condition (logicaloperator condition)* "then" (block | specialword)+ "end"                                   -> if_condition
-                    | "if" condition (logicaloperator condition)* "then" (block | specialword)+ "else" (block | specialword)+ "end"     -> if_else_condition
-                    | "unless" condition (logicaloperator condition)* "then" (block | specialword)+ "end"                               -> unless_condition
-                    | "unless" condition (logicaloperator condition)* "then" (block | specialword)+ "else" (block | specialword)+ "end" -> unless_else_condition
-                    | "switch" value whenstatement* defaultstatement "end"                                                              -> switch_condition
+value                       : 
 
-specialword         : /done/ ";"    -> break
-                    | /skip/ ";"    -> continue
+identifier                  : /[\&\_][\_a-zA-Z0-9]*/
 
-loop                : "while" condition (logicaloperator condition)* "do" block+ "end"  -> while_loop
-                    | "for" assign condition ";" assign "do" block+ "end"               -> for_loop
+type                        : /[a-zA-Z0-9]+[\*]?/
 
-struct              : "struct" identifier assign+ "end"
+string                      : /\'.*\'/ -> apostrophe_string
+                            | /\".*\"/ -> ellipsis_string
 
-calls               : call ("." call)* ";"
-
-call                : identifier "!"                    -> callnoparams
-                    | identifier "(" parameters ")"     -> callwithparams
-
-assign              : "void" "main" "->" block+ "end"                                           -> main_function
-                    | type identifier "->" block+ "end"                                         -> function_no_arguments
-                    | type identifier "->" "(" arguments ")" ";"                                -> function_declaration_arguments
-                    | type identifier "->" "(" arguments ")" block+ "end"                       -> function_with_arguments
-                    | "newtype" type identifier ";"                                             -> typedef
-                    | identifier ("." assign)+                                                  -> struct_variable_access
-                    | identifier (">" assign)+                                                  -> struct_pointer_access
-                    | identifier arrayposition+ "+" "+" ";"                                     -> array_variable_increment
-                    | identifier arrayposition+ "-" "-" ";"                                     -> array_variable_decrement
-                    | identifier "+" "+" ";"                                                    -> variable_increment
-                    | identifier "-" "-" ";"                                                    -> variable_decrement
-                    | identifier arrayposition+ assignoperator value ";"                        -> array_variable_reasign
-                    | identifier assignoperator value ";"                                       -> variable_reasign
-                    | "array" "<" type ">" identifier "=" "[" value ("," value)* "]" ";"        -> array_variable_assign
-                    | "array" "<" type ">" identifier arrayposition+ ";"                        -> array_variable_declaration
-                    | type identifier ";"                                                       -> variable_declaration
-                    | type identifier "=" value ";"                                             -> variable_assing
-                    | "const" type identifier "=" value ";"                                     -> const_variable
-                    | "shared" type identifier "=" value ";"                                    -> shared_variable
-                    | "shared" "const" type identifier "=" value ";"                            -> shared_const_variable
-
-whenstatement       : "when" value ":" block+ "done" ";"
-
-defaultstatement    : "default" ":" block+ 
-
-arrayposition       :  "[" number "]"
-
-condition           : value comparisonoperator value
-                    | value
-
-assignoperator      : /\=/
-                    | /\+\=/
-                    | /\-\=/
-                    | /\*\=/
-                    | /\/\=/
-                    | /\%\=/
-
-comparisonoperator  : /is/      
-                    | /not/      
-                    | /greater/  
-                    | /less/     
-                    | /\>\=/    
-                    | /\<\=/     
-
-logicaloperator     : /and/
-                    | /or/
-
-parameters          : value ("," value)*
-
-arguments           : argument ("," argument)*
-
-argument            : /void/
-                    | type identifier
-                    | type identifier "=" value         -> argument_default
-                    | "array" "<" type ">" identifier   -> array_argument
-
-
-identifier          : /[\&\_][a-zA-Z0-9]*/
-                    | CNAME
-
-type                : /[a-zA-Z0-9]+[\*]?/ -> type
-
-value               : /none/ -> null
-                    | string
-                    | number
-                    | bool
-                    | arithmetic
-                    | calls
-                    | assign
-                    | identifier
-
-arithmetic          : value (arithmeticsign value)+
-
-arithmeticsign      : /\+/
-                    | /\-/ 
-                    | /\//
-                    | /\*/ 
-                    | /\%/ 
-
-string              : /\'.*\'/ 
-                    | /\".*\"/
-
-number              : SIGNED_NUMBER
-                    | SIGNED_FLOAT
-
-bool                : /true/
-                    | /false/
+semicolon                   : ";"
 
 COMMENT             : "--" /[^\n]/*
 
-%import common.SIGNED_NUMBER
-%import common.SIGNED_FLOAT
-%import common.ESCAPED_STRING
 %import common.CNAME
-%import common.WS
-
+%import common.WS_INLINE
+%declare _INDENT _DEDENT
+%ignore WS_INLINE
 %ignore COMMENT
-%ignore WS
+
+_NL: /(\r?\n[\t ]*)+/
