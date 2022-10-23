@@ -1,27 +1,21 @@
-void main ->
-    int age = 20;
+function main(argc: number, argv: string): void
+    let age: number = 10;
+    const name: string = "Bob";
+    let pass: boolean = true;
 
-    age += 1 + 2;
-
+    # Variable assigment.
+    age += 1;
+    age += 1 + age;
+    age++;
     age--;
 
-    bool pass = true;
+    # Pointer variable.
+    let namePointer: string* = &name;
 
-    number sum = age + 1;
+    # Array variable.
+    let myNumbers: number[5] = [1, 2, 3, 4, 5];
 
-    shared float version = 2.0; 
+    let otherNumbers: number[2];
 
-    shared const char letter = "s";
-
-    array<number> myNumbers = [2, 4, 6, 8]; 
-
-    myNumbers[4] *= 8;
-
-    array<number> otherNumbers[10];
-
-    array<number> twoDArray[5][5];
-
-    twoDArray[1][2] = 2;
-
-    number* ptr = &age;
-end
+    otherNumbers[0] = 1;
+    otherNumbers[1] = 2;

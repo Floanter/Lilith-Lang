@@ -1,0 +1,13 @@
+# Boxes are a namespace for lilith
+BOX person
+    function sayHi(void): void
+        empty;
+
+BOX one
+    BOX two
+        function awesome(void): void
+            empty
+
+function main(argc: number, argv: string): void
+    person::sayHi!;
+    one::two::awesome!

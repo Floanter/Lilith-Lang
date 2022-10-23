@@ -1,20 +1,67 @@
 start                       : _NL* file
 
-file                        : block+
+file                        : block+ _NL*
 
-block                       : return semicolon _NL*
+block                       : "empty" semicolon _NL*    -> empty
+                            | "done" semicolon _NL*     -> break
+                            | "skip" semicolon _NL*     -> continue
+                            | return semicolon _NL*
+                            | box _NL*
+                            | box_access semicolon _NL*
+                            | loop _NL*
+                            | conditional _NL*
                             | call semicolon _NL*
+                            | variable semicolon _NL*
                             | function _NL*
-                            | "pass" ";" _NL*
 
 return                      : "return" value
+
+box                         : "BOX" identifier _NL+ [_INDENT block+ _DEDENT] -> namespace
+
+box_access                  : identifier "::" call          -> namespace_access
+                            | identifier "::" box_access    -> nested_namespace_access
+
+loop                        : "while" condition (logical_operator condition)* _NL+ [_INDENT block+ _DEDENT] -> while_loop
+                            | "for" variable "," condition "," variable _NL+ [_INDENT block+ _DEDENT]       -> for_loop
+
+conditional                 : "if" condition (logical_operator condition)*  _NL+ [_INDENT block+ _DEDENT]       -> if_condition
+                            | "unless" condition (logical_operator condition)* _NL+ [_INDENT block+ _DEDENT]    -> if_not_condition
+                            | "switch" value _NL+ [_INDENT when_statement+ default_statement _DEDENT]           -> switch_condition
 
 call                        : identifier "!"                -> call_no_params
                             | identifier "(" parameters ")" -> call_with_params
 
+variable                    : "let" identifier ":" type assign_operator value                                           -> variable_declaration_assign
+                            | "let" identifier ":" type                                                                 -> variable_declaration
+                            | identifier assign_operator value                                                          -> variable_reasign
+                            | identifier "+" "+"                                                                        -> variable_increment
+                            | identifier "-" "-"                                                                        -> variable_decrement
+                            | "let" identifier ":" type "[" array_size "]" assign_operator "[" value ("," value)* "]"   -> array_variable_declaration_assign
+                            | "let" identifier ":" type "[" array_size "]"                                              -> array_variable_declaration
+                            | identifier "[" array_size "]" assign_operator value                                       -> array_variable_reasign
+                            | "const" identifier ":" type assign_operator value                                         -> const_variable_declaration_assign
+                            | "const" identifier ":" type                                                               -> const_variable_declaration
+
 function                    : "function" "main" "(" arguments ")" ":" type _NL+ [_INDENT block+ _DEDENT]        -> main_function
                             | "function" identifier "(" arguments ")" ":" type _NL+ [_INDENT block+ _DEDENT]    -> function
-                            | "declare" identifier "(" arguments ")" ":" type semicolon                          -> function_declare
+                            | "declare" identifier "(" arguments ")" ":" type semicolon                         -> function_declare
+
+when_statement              : "when" value _NL+ [_INDENT block+ _DEDENT]
+
+default_statement           : "default" _NL+ [_INDENT block+ _DEDENT]
+
+condition                   : value comparison_operator value
+                            | value
+
+logical_operator            : /and/
+                            | /or/
+
+comparison_operator         : /is/      
+                            | /not/      
+                            | /greater/  
+                            | /less/     
+                            | /\>\=/    
+                            | /\<\=/
 
 parameters                  : value ("," value)*
 
@@ -59,9 +106,11 @@ number                      : SIGNED_NUMBER -> integer_number
 bool                        : /true/
                             | /false/
 
-semicolon                   : ";"
+array_size                  : SIGNED_NUMBER
 
-COMMENT             : "--" /[^\n]/*
+semicolon                   : ";"?
+
+COMMENT             : "#" /[^\n]/*
 
 %import common.SIGNED_NUMBER
 %import common.SIGNED_FLOAT

@@ -1,34 +1,14 @@
-void main -> 
-    if x is y or 1 less 2 then
+function main(argc: number, argv: string): void
+    if 9 is 10 or 5 less 10 
         pass;
-    end
 
-    if x not y and z greater 0 then
+    unless exists
         pass;
-    end
 
-    if canPass then
-        uno!;
-    else
-        dos!;
-    end
-
-    unless canPass then
-        pass;
-    end
-
-    unless canPass then
-        go!;
-    else
-        notgo!;
-    end
-
-    switch day 
-        when 1:
-            do!;
-            done;
-        default:
-            notdo!;
-    end
-
-end
+    switch name
+        when "Brad"
+            pass;
+        when "Drake"
+            pass;
+        default
+            pass;

@@ -1,12 +1,6 @@
-void main ->
-    while run do
-        empty;
-    end
+function main(argc: number, argv: string): void
+    while 1 less 10
+        done;
 
-    for number i = 0; i less 10; i++; do
-        if i is 4 then
-            run!;
-            done;
-        end
-    end
-end
+    for let i: number = 0, i less 10, i++
+        skip;
