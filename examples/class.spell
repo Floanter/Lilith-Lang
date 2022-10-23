@@ -1,0 +1,10 @@
+class Person
+    new: (void) =>
+        empty
+    public talk: void (void) =>
+        empty
+    private goToBath: void (void) =>
+        empty
+
+function main(argc: number, argv: string): void
+    let jhon: Person = new Person!

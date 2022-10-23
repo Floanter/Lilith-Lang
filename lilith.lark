@@ -6,6 +6,9 @@ block                       : "empty" semicolon _NL*    -> empty
                             | "done" semicolon _NL*     -> break
                             | "skip" semicolon _NL*     -> continue
                             | return semicolon _NL*
+                            | class _NL*
+                            | class_constructor _NL*
+                            | class_definition _NL*
                             | box _NL*
                             | box_access semicolon _NL*
                             | loop _NL*
@@ -15,6 +18,13 @@ block                       : "empty" semicolon _NL*    -> empty
                             | function _NL*
 
 return                      : "return" value
+
+class                       : "class" identifier _NL+ [_INDENT block+ _DEDENT]
+
+class_constructor           : "new" ":" "(" arguments ")" "=>" _NL* [_INDENT block+ _DEDENT]
+
+class_definition            : "public" identifier ":" type "(" arguments ")" "=>" _NL* [_INDENT block+ _DEDENT]  -> public_class_definition
+                            | "private" identifier ":" type "(" arguments ")" "=>" _NL* [_INDENT block+ _DEDENT] -> private_class_definition
 
 box                         : "BOX" identifier _NL+ [_INDENT block+ _DEDENT] -> namespace
 
@@ -33,6 +43,8 @@ call                        : identifier "!"                -> call_no_params
 
 variable                    : "let" identifier ":" type assign_operator value                                           -> variable_declaration_assign
                             | "let" identifier ":" type                                                                 -> variable_declaration
+                            | "let" identifier ":" type assign_operator "new" identifier "!"                            -> variable_class_no_parameter
+                            | "let" identifier ":" type assign_operator "new" identifier "(" parameters ")"             -> variable_class_parameter
                             | identifier assign_operator value                                                          -> variable_reasign
                             | identifier "+" "+"                                                                        -> variable_increment
                             | identifier "-" "-"                                                                        -> variable_decrement
