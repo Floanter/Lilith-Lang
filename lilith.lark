@@ -7,6 +7,7 @@ block                       : "empty" semicolon _NL*    -> empty
                             | "skip" semicolon _NL*     -> continue
                             | "destroy" semicolon _NL*  -> delete
                             | return semicolon _NL*
+                            | enum _NL*
                             | template _NL*
                             | class _NL*
                             | class_constructor _NL*
@@ -22,6 +23,11 @@ block                       : "empty" semicolon _NL*    -> empty
                             | function _NL*
 
 return                      : "return" value
+
+enum                        : "enum" identifier _NL+ [_INDENT enum_value (_NL+ "," enum_value)* _DEDENT]
+
+enum_value                  : identifier
+                            | identifier "=" value -> enum_value_assignment
 
 template                    : "template" "<" type ">" _NL+ [_INDENT (function | class) _DEDENT]
 
