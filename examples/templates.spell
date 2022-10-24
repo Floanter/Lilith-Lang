@@ -4,14 +4,12 @@ template < myNewType >
 
 template < otherType >
     class Foo
-        private thin: otherType
+        private thing: otherType
 
-        new: (thin: otherType) =>
-            @thin = thin
+        new: (newThin: otherType) =>
+            thing = newThing
 
 function main(argc: number, argv: string): void
     let age: number
-
-    age = iReturnEverything(2)
 
     let faa: Foo<string> = Foo("hello")

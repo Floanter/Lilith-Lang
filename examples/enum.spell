@@ -1,12 +1,3 @@
-enum Season
-    Spring,
-    Summer,
-    Autumn,
-    Winter
 
-enum Card
-    Ace = 20,
-    Numbers = 5,
-    Queen = 10,
-    King = 10,
-    Joker = 50,
+function main(argc: number, argv: string): void
+    std::cout << "Hola Mundo" << std::endl;

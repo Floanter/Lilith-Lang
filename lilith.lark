@@ -1,12 +1,15 @@
-start                       : _NL* file
+start                       : _NL* file _NL*
 
-file                        : block+ _NL*
+file                        : block+
 
-block                       : "empty" semicolon _NL*    -> empty
+block                       : import semicolon _NL*
+                            | c_import semicolon _NL*
+                            | "empty" semicolon _NL*    -> empty
                             | "stop" semicolon _NL*     -> break
                             | "skip" semicolon _NL*     -> continue
                             | "destroy" semicolon _NL*  -> delete
                             | return semicolon _NL*
+                            | overflow semicolon _NL*
                             | enum _NL*
                             | template _NL*
                             | class _NL*
@@ -22,9 +25,17 @@ block                       : "empty" semicolon _NL*    -> empty
                             | variable semicolon _NL*
                             | function _NL*
 
+import                      : "using" "<" identifier ">"    -> import_lilith_builtin
+                            | "using" string                -> import_lilith_file
+
+c_import                    : "c_lib" "<" identifier ">"    -> c_include_lib
+                            | "use_header" string           -> c_header
+
 return                      : "return" value
 
-enum                        : "enum" identifier _NL+ [_INDENT enum_value (_NL+ "," enum_value)* _DEDENT]
+overflow                    : (box_access | identifier) (overflow_operator (box_access | value))+
+
+enum                        : "enum" identifier _NL+ [_INDENT enum_value+ _DEDENT]
 
 enum_value                  : identifier
                             | identifier "=" value -> enum_value_assignment
@@ -46,13 +57,15 @@ class_definition            : "public" identifier ":" type "(" arguments ")" "=>
 class_this_access           : "@" variable  -> this_variable_assignment
                             | "@" call      -> this_call
 
-class_access                : identifier ("." call)     -> class_access_call
-                            | identifier ("." variable) -> class_access_variable
+class_access                : identifier ("." variable) -> class_access_variable
+                            | identifier ("." call)     -> class_access_call
 
 box                         : "BOX" identifier _NL+ [_INDENT block+ _DEDENT] -> namespace
 
-box_access                  : identifier "::" call          -> namespace_access
+box_access                  : identifier "::" call          -> namespace_access_call
+                            | identifier "::" variable      -> namespace_access_variable
                             | identifier "::" box_access    -> nested_namespace_access
+                            | identifier "::" identifier    -> namespace_access_identifier
 
 loop                        : "while" condition (logical_operator condition)* _NL+ [_INDENT block+ _DEDENT] -> while_loop
                             | "for" variable "," condition "," variable _NL+ [_INDENT block+ _DEDENT]       -> for_loop
@@ -70,7 +83,7 @@ variable                    : "let" identifier ":" type assign_operator value   
                             | "let" identifier ":" type "<" type ">"                                                    -> variable_subtype_declaration
                             | "let" identifier ":" type assign_operator "new" identifier "!"                            -> variable_class_no_parameter
                             | "let" identifier ":" type assign_operator "new" identifier "(" parameters ")"             -> variable_class_parameter
-                            | identifier assign_operator value                                                          -> variable_reasign
+                            | identifier assign_operator value                                                          -> variable_reasign                                                     
                             | identifier "+" "+"                                                                        -> variable_increment
                             | identifier "-" "-"                                                                        -> variable_decrement
                             | "let" identifier ":" type "[" array_size "]" assign_operator "[" value ("," value)* "]"   -> array_variable_declaration_assign
@@ -109,6 +122,9 @@ assign_operator             : /\=/
                             | /\/\=/
                             | /\%\=/
 
+overflow_operator           : /\<\</
+                            | /\>\>/
+
 arguments                   : "void" -> no_arguments
                             | argument ("," argument)*
 
@@ -132,7 +148,7 @@ arithmetic_sign             : /\+/
 identifier                  : /[\&][a-zA-Z0-9]*/
                             | CNAME
 
-type                        : /[a-zA-Z0-9]+[\*]?/
+type                        : /[a-zA-Z0-9]+[\*]?[\&]?/
 
 string                      : /\'.*\'/ -> apostrophe_string
                             | /\".*\"/ -> ellipsis_string
@@ -145,7 +161,7 @@ bool                        : /true/
 
 array_size                  : SIGNED_NUMBER
 
-semicolon                   : ";"?
+semicolon                   : ";"
 
 COMMENT             : "#" /[^\n]/*
 
