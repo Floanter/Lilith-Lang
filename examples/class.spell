@@ -6,5 +6,21 @@ class Person
     private goToBath: void (void) =>
         empty
 
+class Animal
+    new: (void) =>
+        empty
+    
+    public eat: void (void) =>
+        empty
+    
+class Cat extends Animal
+    new: (void) =>
+        empty
+
 function main(argc: number, argv: string): void
     let jhon: Person = new Person!
+
+    jhon.talk!
+
+    let myCat: Cat = new Cat!
+    myCat.eat!

@@ -3,12 +3,16 @@ start                       : _NL* file
 file                        : block+ _NL*
 
 block                       : "empty" semicolon _NL*    -> empty
-                            | "done" semicolon _NL*     -> break
+                            | "stop" semicolon _NL*     -> break
                             | "skip" semicolon _NL*     -> continue
+                            | "destroy" semicolon _NL*  -> delete
                             | return semicolon _NL*
+                            | template _NL*
                             | class _NL*
                             | class_constructor _NL*
                             | class_definition _NL*
+                            | class_this_access semicolon _NL*
+                            | class_access semicolon _NL*
                             | box _NL*
                             | box_access semicolon _NL*
                             | loop _NL*
@@ -19,12 +23,25 @@ block                       : "empty" semicolon _NL*    -> empty
 
 return                      : "return" value
 
+template                    : "template" "<" type ">" _NL+ [_INDENT (function | class) _DEDENT]
+
 class                       : "class" identifier _NL+ [_INDENT block+ _DEDENT]
+                            | "class" identifier class_extends  _NL+ [_INDENT block+ _DEDENT] -> class_inheritance
+
+class_extends               : "extends" identifier ("," identifier)*
 
 class_constructor           : "new" ":" "(" arguments ")" "=>" _NL* [_INDENT block+ _DEDENT]
 
-class_definition            : "public" identifier ":" type "(" arguments ")" "=>" _NL* [_INDENT block+ _DEDENT]  -> public_class_definition
-                            | "private" identifier ":" type "(" arguments ")" "=>" _NL* [_INDENT block+ _DEDENT] -> private_class_definition
+class_definition            : "public" identifier ":" type "(" arguments ")" "=>" _NL+ [_INDENT block+ _DEDENT]     -> public_class_definition
+                            | "public" identifier ":" type semicolon                                                -> public_class_variable_definition
+                            | "private" identifier ":" type "(" arguments ")" "=>" _NL+ [_INDENT block+ _DEDENT]    -> private_class_definition
+                            | "private" identifier ":" type semicolon                                               -> private_class_variable_definition
+
+class_this_access           : "@" variable  -> this_variable_assignment
+                            | "@" call      -> this_call
+
+class_access                : identifier ("." call)     -> class_access_call
+                            | identifier ("." variable) -> class_access_variable
 
 box                         : "BOX" identifier _NL+ [_INDENT block+ _DEDENT] -> namespace
 
@@ -43,6 +60,8 @@ call                        : identifier "!"                -> call_no_params
 
 variable                    : "let" identifier ":" type assign_operator value                                           -> variable_declaration_assign
                             | "let" identifier ":" type                                                                 -> variable_declaration
+                            | "let" identifier ":" type "<" type ">" assign_operator value                              -> variable_subtype_declaration_assign
+                            | "let" identifier ":" type "<" type ">"                                                    -> variable_subtype_declaration
                             | "let" identifier ":" type assign_operator "new" identifier "!"                            -> variable_class_no_parameter
                             | "let" identifier ":" type assign_operator "new" identifier "(" parameters ")"             -> variable_class_parameter
                             | identifier assign_operator value                                                          -> variable_reasign

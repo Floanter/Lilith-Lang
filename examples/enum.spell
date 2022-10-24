@@ -1,0 +1,12 @@
+enum Season
+    Spring,
+    Summer,
+    Autumn,
+    Winter
+
+enum Card
+    Ace = 20,
+    Numbers = 5,
+    Queen = 10,
+    King = 10,
+    Joker = 50,

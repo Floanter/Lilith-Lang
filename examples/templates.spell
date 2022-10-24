@@ -1,0 +1,17 @@
+template < myNewType >
+    function iReturnEverything (param: myNewType): myNewType
+        return param
+
+template < otherType >
+    class Foo
+        private thin: otherType
+
+        new: (thin: otherType) =>
+            @thin = thin
+
+function main(argc: number, argv: string): void
+    let age: number
+
+    age = iReturnEverything(2)
+
+    let faa: Foo<string> = Foo("hello")
