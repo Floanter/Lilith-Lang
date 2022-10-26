@@ -1,10 +1,12 @@
 from src.Templates import Templates
+from src.Parser import LilithParser
 
 class CodeGen():
     def __init__(self):
         self.file = ''
         self.headers = []
         self.builtins = []
+        self.parser = LilithParser()
         self.templates = Templates()
 
     def generate(self, tokens):
@@ -21,6 +23,9 @@ class CodeGen():
                 file += self._block(block)
 
         return file
+
+    def _builtin(self, tokens):
+        pass
 
     def _block(self, tokens):
         block = ''
@@ -182,6 +187,7 @@ class CodeGen():
             tokenType = token.data
             if tokenType == 'identifier':
                 identifier += self._identifier(token)
+    
         return self.templates.import_lilith_builtin(identifier)
 
     def _parameters(self, tokens):
