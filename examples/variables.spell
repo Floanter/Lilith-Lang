@@ -1,7 +1,11 @@
 function main(argc: number, argv: string): void
-    let age: number = 10;
+    let someThing: int;
+    let age: int = 10;
     const name: string = "Bob";
-    let pass: boolean = true;
+    let pass: bool = true;
+
+    # Reference 
+    let nameReference: string& = name;
 
     # Variable assigment.
     age += 1;
@@ -13,9 +17,9 @@ function main(argc: number, argv: string): void
     let namePointer: string* = &name;
 
     # Array variable.
-    let myNumbers: number[5] = [1, 2, 3, 4, 5];
+    let myNumbers: int[5] = [1, 2, 3, 4, 5];
 
-    let otherNumbers: number[2];
+    let otherNumbers: int[2];
 
     otherNumbers[0] = 1;
     otherNumbers[1] = 2;

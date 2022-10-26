@@ -67,3 +67,67 @@ class Templates:
 
     def import_lilith_builtin(self, identifier):
         return f'#include"builtins/{identifier}.h"'
+
+    ################################################################################################
+    ################################################################################################
+    #                                           VARIABLES
+    ################################################################################################
+    ################################################################################################
+    def variable_declaration(self, type, identifier):
+        return f'{type} {identifier};\n'
+
+    def variable_declaration_assign(self, type, identifier, assign_operator, value):
+        return f'{type} {identifier} {assign_operator} {value};\n'
+
+    def const_variable_declaration_assign(self, type, identifier, assign_operator, value):
+        return f'const {type} {identifier} {assign_operator} {value};\n'
+
+    def variable_reasign(self, identifier, assign_operator, value):
+        return f'{identifier} {assign_operator} {value};\n'
+
+    def variable_increment(self, identifier):
+        return f'{identifier}++;\n'
+
+    def variable_decrement(self, identifier):
+        return f'{identifier}--;\n'
+
+    def array_variable_declaration_assign(self, type, identifier, array_size, assign_operator, values):
+        array = f'{type} {identifier}[{array_size}] {assign_operator} {{{values[0]}'
+
+        if len(values) > 1:
+            for i in range(1, len(values)):
+                array += f', {values[i]}'
+
+        array += '};\n'
+
+        return array
+
+    def array_variable_declaration(self, type, identifier, array_size):
+        return f'{type} {identifier}[{array_size}];\n'
+
+    def array_variable_reasign(self, identifier, array_size, assign_operator, value):
+        return f'{identifier}[{array_size}] {assign_operator} {value};\n'
+    ################################################################################################
+    ################################################################################################
+    #                                           VARIABLES
+    ################################################################################################
+    ################################################################################################
+
+    ################################################################################################
+    ################################################################################################
+    #                                           ARITHMETIC
+    ################################################################################################
+    ################################################################################################
+
+    def arithmetic(self, arithmetic_signs, values):
+        arithmetic = f'{values[0]} {arithmetic_signs[0]} {values[1]}'
+        if len(arithmetic_signs) > 1:
+            for i in range(1, len(arithmetic_signs)):
+                arithmetic += f'{arithmetic_signs[i]} {values[i+1]}'
+        return arithmetic
+
+    ################################################################################################
+    ################################################################################################
+    #                                           ARITHMETIC
+    ################################################################################################
+    ################################################################################################

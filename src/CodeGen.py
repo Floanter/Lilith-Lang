@@ -15,6 +15,12 @@ class CodeGen():
                 self.file += self._file(file)
                 #print(self.file)
 
+    ################################################################################################
+    ################################################################################################
+    #                                               FILE
+    ################################################################################################
+    ################################################################################################
+
     def _file(self, tokens):
         file = ''
         for block in tokens.children:
@@ -24,14 +30,26 @@ class CodeGen():
 
         return file
 
+    ################################################################################################
+    ################################################################################################
+    #                                               FILE
+    ################################################################################################
+    ################################################################################################
+
     def _builtin(self, tokens):
         pass
-
+    
+    ################################################################################################
+    ################################################################################################
+    #                                            BLOCK
+    ################################################################################################
+    ################################################################################################
     def _block(self, tokens):
         block = ''
         for token in tokens.children:
+            
             tokenType = token.data
-            #print(tokenType)
+            print(tokenType)
             if tokenType == 'namespace':
                 block += self._namespace(token)
 
@@ -41,16 +59,229 @@ class CodeGen():
             if tokenType == 'overflow_box_access_value':
                 block += self._overflow_box_access_value(token)
 
-            if tokenType == 'main_function':
-                block += self._main_function(token)
-
             if tokenType == 'namespace_access_call':
                 block += self._namespace_access_call(token)
 
             if tokenType == 'import_lilith_builtin':
                 block += self._import_lilith_builtin(token)
+
+            #                   FUNCTIONS                       #
+            if tokenType == 'main_function':
+                block += self._main_function(token)
+            #                   FUNCTIONS                       #
+
+            
+            #                   VARIABLES                       #
+            if tokenType == 'variable_declaration':
+                block += self._variable_declaration(token)
+
+            if tokenType == 'variable_declaration_assign':
+                block += self._variable_declaration_assign(token)
+
+            if tokenType == 'const_variable_declaration_assign':
+                block += self._const_variable_declaration_assign(token)
+
+            if tokenType == 'variable_reasign':
+                block += self._variable_reasign(token)
+
+            if tokenType == 'variable_increment':
+                block += self._variable_increment(token)
+
+            if tokenType == 'variable_decrement':
+                block += self._variable_decrement(token)
+
+            if tokenType == 'array_variable_declaration_assign':
+                block += self._array_variable_declaration_assign(token)
+
+            if tokenType == 'array_variable_declaration':
+                block += self._array_variable_declaration(token)
+
+            if tokenType == 'array_variable_reasign':
+                block += self._array_variable_reasign(token)
+            #                   VARIABLES                       #
         
         return block
+
+    ################################################################################################
+    ################################################################################################
+    #                                            BLOCK
+    ################################################################################################
+    ################################################################################################
+
+
+
+    ################################################################################################
+    ################################################################################################
+    #                                           VARIABLES
+    ################################################################################################
+    ################################################################################################
+    def _variable_declaration(self, tokens):
+        type = ''
+        identifier = ''
+        for token in tokens.children:
+            tokenType = token.data
+            #print(tokenType)
+            if tokenType == 'type':
+                type += self._type(token)
+
+            if tokenType == 'identifier':
+                identifier += self._type(token)
+
+        return self.templates.variable_declaration(type, identifier)
+
+    def _variable_declaration_assign(self, tokens):
+        type = ''
+        identifier = ''
+        assign_operator = ''
+        value = ''
+        for token in tokens.children:
+            tokenType = token.data
+            #print(tokenType)
+            if tokenType == 'type':
+                type += self._type(token)
+
+            if tokenType == 'identifier':
+                identifier += self._type(token)
+
+            if tokenType == 'assign_operator':
+                assign_operator += self._assign_operator(token)
+
+            if tokenType == 'value':
+                value += self._value(token)
+        return self.templates.variable_declaration_assign(type, identifier, assign_operator, value)
+
+    def _const_variable_declaration_assign(self, tokens):
+        type = ''
+        identifier = ''
+        assign_operator = ''
+        value = ''
+        for token in tokens.children:
+            tokenType = token.data
+            #print(tokenType)
+            if tokenType == 'type':
+                type += self._type(token)
+
+            if tokenType == 'identifier':
+                identifier += self._type(token)
+
+            if tokenType == 'assign_operator':
+                assign_operator += self._assign_operator(token)
+
+            if tokenType == 'value':
+                value += self._value(token)
+        return self.templates.const_variable_declaration_assign(type, identifier, assign_operator, value)
+
+    def _variable_reasign(self, tokens):
+        identifier = ''
+        assign_operator = ''
+        value = ''
+        for token in tokens.children:
+            tokenType = token.data
+            #print(tokenType)
+            if tokenType == 'identifier':
+                identifier += self._type(token)
+
+            if tokenType == 'assign_operator':
+                assign_operator += self._assign_operator(token)
+
+            if tokenType == 'value':
+                value += self._value(token)
+        return self.templates.variable_reasign(identifier, assign_operator, value)
+
+    def _variable_increment(self, tokens):
+        identifier = ''
+        for token in tokens.children:
+            tokenType = token.data
+            #print(tokenType)
+            if tokenType == 'identifier':
+                identifier += self._identifier(token)
+
+        return self.templates.variable_increment(identifier)
+
+    def _variable_decrement(self, tokens):
+        identifier = ''
+        for token in tokens.children:
+            tokenType = token.data
+            #print(tokenType)
+            if tokenType == 'identifier':
+                identifier += self._identifier(token)
+
+        return self.templates.variable_decrement(identifier)
+
+    def _array_variable_declaration_assign(self, tokens):
+        type = ''
+        identifier = ''
+        array_size = ''
+        assign_operator = ''
+        values = []
+        for token in tokens.children:
+            tokenType = token.data
+            #print(tokenType)
+            if tokenType == 'type':
+                type += self._type(token)
+            
+            if tokenType == 'identifier':
+                identifier += self._identifier(token)
+
+            if tokenType == 'array_size':
+                for number in token.children:
+                    array_size += number
+
+            if tokenType == 'assign_operator':
+                assign_operator += self._assign_operator(token)
+
+            if tokenType == 'value':
+                values.append(self._value(token))
+
+        return self.templates.array_variable_declaration_assign(type, identifier, array_size, assign_operator, values)
+
+    def _array_variable_declaration(self, tokens):
+        type = ''
+        identifier = ''
+        array_size = ''
+        for token in tokens.children:
+            tokenType = token.data
+            #print(tokenType)
+            if tokenType == 'type':
+                type += self._type(token)
+            
+            if tokenType == 'identifier':
+                identifier += self._identifier(token)
+
+            if tokenType == 'array_size':
+                for number in token.children:
+                    array_size += number
+
+        return self.templates.array_variable_declaration(type, identifier, array_size)
+
+    def _array_variable_reasign(self, tokens):
+        identifier = ''
+        array_size = ''
+        assign_operator = ''
+        value = ''
+        for token in tokens.children:
+            tokenType = token.data
+            #print(tokenType)
+            
+            if tokenType == 'identifier':
+                identifier += self._identifier(token)
+
+            if tokenType == 'array_size':
+                for number in token.children:
+                    array_size += number
+
+            if tokenType == 'assign_operator':
+                assign_operator += self._assign_operator(token)
+
+            if tokenType == 'value':
+                value += self._value(token)
+
+        return self.templates.array_variable_reasign(identifier, array_size, assign_operator, value)
+    ################################################################################################
+    ################################################################################################
+    #                                           VARIABLES
+    ################################################################################################
+    ################################################################################################
 
     def _namespace(self, tokens):
         identifier = ''
@@ -198,6 +429,11 @@ class CodeGen():
                 values.append(self._value(token))
         return self.templates.parameters(values)
 
+    ################################################################################################
+    ################################################################################################
+    #                                           VALUE
+    ################################################################################################
+    ################################################################################################
     def _value(self, tokens):
         value = ''
         for token in tokens.children:
@@ -209,8 +445,32 @@ class CodeGen():
 
             if tokenType == 'ellipsis_string':
                 value += self._ellipsis_string(token)
+
+            if tokenType == 'number':
+                value += self._number(token)
+
+            if tokenType == 'arithmetic':
+                value += self._arithmetic(token)
             
         return value
+    ################################################################################################
+    ################################################################################################
+    #                                           VALUE
+    ################################################################################################
+    ################################################################################################
+
+    def _arithmetic(self, tokens):
+        values = []
+        arithmetic_signs = []
+        for token in tokens.children:
+            tokenType = token.data
+            #print(tokenType)
+            if tokenType == 'arithmetic_sign':
+                arithmetic_signs.append(self._arithmetic_sign(token))
+
+            if tokenType == 'value':
+                values.append(self._value(token))
+        return self.templates.arithmetic(arithmetic_signs, values)
 
     def _arguments(self, tokens):
         types = []
@@ -227,6 +487,18 @@ class CodeGen():
        
         return self.templates.arguments(types, identifiers)
 
+    def _arithmetic_sign(self, tokens):
+        arithmetic_sign = ''
+        for token in tokens.children:
+            arithmetic_sign += token
+        return arithmetic_sign
+
+    def _assign_operator(self, tokens):
+        assign_operator = ''
+        for token in tokens.children:
+            assign_operator += token
+        return token
+
     def _identifier(self, tokens):
         identifier = ''
         for token in tokens.children:
@@ -238,6 +510,12 @@ class CodeGen():
         for token in tokens.children:
             type += token
         return type
+
+    def _number(self, tokens):
+        number = ''
+        for token in tokens.children:
+            number += token
+        return number
 
     def _ellipsis_string(self, tokens):
         string = ''

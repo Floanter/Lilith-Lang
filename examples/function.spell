@@ -1,15 +1,3 @@
-function IDontDoAnything(void): void
-    empty;
 
-function sum(x: number, y: number): number
-    empty;
-
-declare otherFunction(void): void;
-
-function main(argc: number, argv: string): void
-    IDontDoAnything!;
-    sum(10, 20.5);
-    otherFunction!;
-
-function otherFunction(void): void 
-    empty;
+function main(void): void
+    return as + 2;
