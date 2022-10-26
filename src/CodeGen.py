@@ -2,13 +2,16 @@ from src.Templates import Templates
 
 class CodeGen():
     def __init__(self):
-        self.files = []
+        self.file = ''
+        self.headers = []
+        self.builtins = []
         self.templates = Templates()
 
     def generate(self, tokens):
         for file in tokens.children:
             if file.data == 'file':
-                self.files.append(self._file(file))
+                self.file += self._file(file)
+                #print(self.file)
 
     def _file(self, tokens):
         file = ''
@@ -23,15 +26,24 @@ class CodeGen():
         block = ''
         for token in tokens.children:
             tokenType = token.data
-            print(tokenType)
+            #print(tokenType)
             if tokenType == 'namespace':
                 block += self._namespace(token)
 
             if tokenType == 'template':
                 block += self._template(token)
 
-            if tokenType == 'overflow':
-                block += self._overflow(token)
+            if tokenType == 'overflow_box_access_value':
+                block += self._overflow_box_access_value(token)
+
+            if tokenType == 'main_function':
+                block += self._main_function(token)
+
+            if tokenType == 'namespace_access_call':
+                block += self._namespace_access_call(token)
+
+            if tokenType == 'import_lilith_builtin':
+                block += self._import_lilith_builtin(token)
         
         return block
 
@@ -49,6 +61,19 @@ class CodeGen():
 
         return self.templates.namespace(identifier, blocks)
 
+    def _namespace_access_call(self, tokens):
+        identifier = ''
+        call = ''
+        for token in tokens.children:
+            tokenType = token.data
+            #print(tokenType)
+            if tokenType == 'identifier':
+                identifier += self._identifier(token)
+            
+            if tokenType == 'call_with_params':
+                call += self._call_with_params(token)
+        return self.templates.namespace_access_call(identifier, call)
+
     def _template(self, tokens):
         type = ''
         function = ''
@@ -62,6 +87,25 @@ class CodeGen():
                 function += self._function(token)
 
         return self.templates.template(type, function)
+
+    def _main_function(self, tokens):
+        insideCode = ''
+        arguments = ''
+        for token in tokens.children:
+            tokenType = token.data
+            #print(tokenType)
+            if tokenType == 'arguments':
+                arguments += self._arguments(token)
+
+            if tokenType == 'block':
+                insideCode += self._block(token)
+
+            if tokenType == 'no_arguments':
+                arguments += 'void'
+                
+        if arguments == 'void':
+            return self.templates.mainFunction(insideCode, None)
+        return self.templates.mainFunction(insideCode, arguments)
 
     def _function(self, tokens):
         identifier = ''
@@ -85,22 +129,23 @@ class CodeGen():
 
         return self.templates.function(type, identifier, arguments, insideCode)
 
-    def _overflow(self, tokens):
-        namespace_identifier = ''
-        overflow_operator = ''
-        value = ''
+    def _overflow_box_access_value(self, tokens):
+        namespace_identifier = []
+        overflow_operator = []
+        value = []
+
         for token in tokens.children:
             tokenType = token.data
             #print(tokenType)
             if tokenType == 'namespace_access_identifier':
-                namespace_identifier += self._namespace_access_identifier(token)
+                namespace_identifier.append(self._namespace_access_identifier(token))
 
             if tokenType == 'overflow_operator':
-                overflow_operator += self._overflow_operator(token)
+                overflow_operator.append(self._overflow_operator(token))
 
             if tokenType == 'value':
-                value += self._value(token)
-
+                value.append(self._value(token))
+        #print(self.templates.overflow(namespace_identifier, overflow_operator, value))
         return self.templates.overflow(namespace_identifier, overflow_operator, value)
 
     def _namespace_access_identifier(self, tokens):
@@ -117,6 +162,36 @@ class CodeGen():
             operator += token
         return operator
 
+    def _call_with_params(self, tokens):
+        identifier = ''
+        parameters = ''
+
+        for token in tokens.children:
+            tokenType = token.data
+            #print(tokenType)
+            if tokenType == 'identifier':
+                identifier += self._identifier(token)
+
+            if tokenType == 'parameters':
+                parameters += self._parameters(token)
+        return self.templates.call_with_params(identifier, parameters)
+
+    def _import_lilith_builtin(self, tokens):
+        identifier = ''
+        for token in tokens.children:
+            tokenType = token.data
+            if tokenType == 'identifier':
+                identifier += self._identifier(token)
+        return self.templates.import_lilith_builtin(identifier)
+
+    def _parameters(self, tokens):
+        values = []
+        for token in tokens.children:
+            tokenType = token.data
+            if tokenType == 'value':
+                values.append(self._value(token))
+        return self.templates.parameters(values)
+
     def _value(self, tokens):
         value = ''
         for token in tokens.children:
@@ -125,6 +200,9 @@ class CodeGen():
 
             if tokenType == 'identifier':
                 value += self._identifier(token)
+
+            if tokenType == 'ellipsis_string':
+                value += self._ellipsis_string(token)
             
         return value
 
@@ -140,7 +218,7 @@ class CodeGen():
 
                 if tokenType == 'type':
                     types.append(self._type(token))
-            
+       
         return self.templates.arguments(types, identifiers)
 
     def _identifier(self, tokens):
@@ -154,3 +232,9 @@ class CodeGen():
         for token in tokens.children:
             type += token
         return type
+
+    def _ellipsis_string(self, tokens):
+        string = ''
+        for token in tokens.children:
+            string += token
+        return string

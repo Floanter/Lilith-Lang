@@ -33,7 +33,10 @@ c_import                    : "c_lib" "<" identifier ">"    -> c_include_lib
 
 return                      : "return" value
 
-overflow                    : (box_access | identifier) (overflow_operator (box_access | value))+
+overflow                    : box_access (overflow_operator box_access)+    -> overflow_box_access_x2
+                            | box_access (overflow_operator value)+         -> overflow_box_access_value
+                            | box_access (overflow_operator value)+         -> overflow_box_access_value
+                            | identifier (overflow_operator value)+         -> overflow_identifier_value
 
 enum                        : "enum" identifier _NL+ [_INDENT enum_value+ _DEDENT]
 

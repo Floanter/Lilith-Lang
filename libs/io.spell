@@ -1,0 +1,20 @@
+BOX io
+    template < PrintType >
+        function print(valueToPrint: PrintType&): void 
+            std::cout << valueToPrint;
+
+    template < PrintlnType >
+        function println(valueToPrint: PrintlnType&): void
+            std::cout << valueToPrint << "\n";
+
+    template < InputType >
+        function input(variableToAddInput: InputType&): void
+            std::cin >> variableToAddInput;
+    
+    template < ErrorType >
+        function error(errorToShow: ErrorType&): void
+            std::cerr << errorToShow;
+
+    template < LogType > 
+        function log(valueForLog: LogType&): void
+            std::clog << valueForLog;

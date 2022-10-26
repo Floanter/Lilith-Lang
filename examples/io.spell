@@ -5,7 +5,7 @@ BOX io
 
     template < PrintlnType >
         function println(valueToPrint: PrintlnType&): void
-            std::cout << valueToPrint << std::endl;
+            std::cout << valueToPrint << "\n";
 
     template < InputType >
         function input(variableToAddInput: InputType&): void

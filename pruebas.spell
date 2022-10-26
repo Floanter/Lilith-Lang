@@ -1,0 +1,4 @@
+using < io >;
+
+function main(void): void
+    io::println("Hello world!");
