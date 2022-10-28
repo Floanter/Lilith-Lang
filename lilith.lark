@@ -1,180 +1,52 @@
-start                       : _NL* file _NL*
+file                        : newline* (block end_block)+
 
-file                        : block+
+block                       : import
+                            | special_words
+                            | function
+                            | variable_creation
 
-block                       : import semicolon _NL*
-                            | c_import semicolon _NL*
-                            | "empty" semicolon _NL*    -> empty
-                            | "stop" semicolon _NL*     -> break
-                            | "skip" semicolon _NL*     -> continue
-                            | "destroy" semicolon _NL*  -> delete
-                            | return _NL*
-                            | overflow semicolon _NL*
-                            | enum _NL*
-                            | template _NL*
-                            | class _NL*
-                            | class_constructor _NL*
-                            | class_definition _NL*
-                            | class_this_access semicolon _NL*
-                            | class_access semicolon _NL*
-                            | box _NL*
-                            | box_access semicolon _NL*
-                            | loop _NL*
-                            | conditional _NL*
-                            | call semicolon _NL*
-                            | variable semicolon _NL*
-                            | function _NL*
+import                      : "using:" newline indent (builtin_spell | custom_spell) (newline (builtin_spell | custom_spell))* end_block
 
-import                      : "using" "<" identifier ">"    -> import_lilith_builtin
-                            | "using" string                -> import_lilith_file
+function                    : "function" "main" "(" ")" ":" "void" newline indent block+ end_block      -> main_function
+                            | "function" identifier "(" ")" ":" type newline indent block+ end_block    -> function_definition
+                            | "declare" identifier "(" ")" ":" type end_block                           -> function_declaretion
 
-c_import                    : "c_lib" "<" identifier ">"    -> c_include_lib
-                            | "use_header" string           -> c_header
+variable_creation           : variable_type             -> var_declaration
+                            | variable_type "=" value   -> var_declaration_assign
 
-return                      : "return" value semicolon -> return
+variable_type               : "let" identifier ":" type     -> normal_var_type
+                            | "const" identifier ":" type   -> const_var_type
+                            | "static" identifier ":" type  -> static_var_type
 
-overflow                    : box_access (overflow_operator box_access)+    -> overflow_box_access_x2
-                            | box_access (overflow_operator value)+         -> overflow_box_access_value
-                            | box_access (overflow_operator value)+         -> overflow_box_access_value
-                            | identifier (overflow_operator value)+         -> overflow_identifier_value
+special_words               : "pass" -> pass
 
-enum                        : "enum" identifier _NL+ [_INDENT enum_value+ _DEDENT]
-
-enum_value                  : identifier
-                            | identifier "=" value -> enum_value_assignment
-
-template                    : "template" "<" type ">" _NL+ [_INDENT (function | class) _DEDENT]
-
-class                       : "class" identifier _NL+ [_INDENT block+ _DEDENT]
-                            | "class" identifier class_extends  _NL+ [_INDENT block+ _DEDENT] -> class_inheritance
-
-class_extends               : "extends" identifier ("," identifier)*
-
-class_constructor           : "new" ":" "(" arguments ")" "=>" _NL* [_INDENT block+ _DEDENT]
-
-class_definition            : "public" identifier ":" type "(" arguments ")" "=>" _NL+ [_INDENT block+ _DEDENT]     -> public_class_definition
-                            | "public" identifier ":" type semicolon                                                -> public_class_variable_definition
-                            | "private" identifier ":" type "(" arguments ")" "=>" _NL+ [_INDENT block+ _DEDENT]    -> private_class_definition
-                            | "private" identifier ":" type semicolon                                               -> private_class_variable_definition
-
-class_this_access           : "@" variable  -> this_variable_assignment
-                            | "@" call      -> this_call
-
-class_access                : identifier ("." variable) -> class_access_variable
-                            | identifier ("." call)     -> class_access_call
-
-box                         : "BOX" identifier _NL+ [_INDENT block+ _DEDENT] -> namespace
-
-box_access                  : identifier "::" call          -> namespace_access_call
-                            | identifier "::" variable      -> namespace_access_variable
-                            | identifier "::" box_access    -> nested_namespace_access
-                            | identifier "::" identifier    -> namespace_access_identifier
-
-loop                        : "while" condition (logical_operator condition)* _NL+ [_INDENT block+ _DEDENT] -> while_loop
-                            | "for" variable "," condition "," variable _NL+ [_INDENT block+ _DEDENT]       -> for_loop
-
-conditional                 : "if" condition (logical_operator condition)*  _NL+ [_INDENT block+ _DEDENT]       -> if_condition
-                            | "unless" condition (logical_operator condition)* _NL+ [_INDENT block+ _DEDENT]    -> if_not_condition
-                            | "switch" value _NL+ [_INDENT when_statement+ default_statement _DEDENT]           -> switch_condition
-
-call                        : identifier "!"                -> call_no_params
-                            | identifier "(" parameters ")" -> call_with_params
-
-variable                    : "let" identifier ":" type assign_operator value                                           -> variable_declaration_assign
-                            | "let" identifier ":" type                                                                 -> variable_declaration
-                            | "let" identifier ":" type "<" type ">" assign_operator value                              -> variable_subtype_declaration_assign
-                            | "let" identifier ":" type "<" type ">"                                                    -> variable_subtype_declaration
-                            | "let" identifier ":" type assign_operator "new" identifier "!"                            -> variable_class_no_parameter
-                            | "let" identifier ":" type assign_operator "new" identifier "(" parameters ")"             -> variable_class_parameter
-                            | identifier assign_operator value                                                          -> variable_reasign                                                     
-                            | identifier "+" "+"                                                                        -> variable_increment
-                            | identifier "-" "-"                                                                        -> variable_decrement
-                            | "let" identifier ":" type "[" array_size "]" assign_operator "[" value ("," value)* "]"   -> array_variable_declaration_assign
-                            | "let" identifier ":" type "[" array_size "]"                                              -> array_variable_declaration
-                            | identifier "[" array_size "]" assign_operator value                                       -> array_variable_reasign
-                            | "const" identifier ":" type assign_operator value                                         -> const_variable_declaration_assign
-                            | "const" identifier ":" type                                                               -> const_variable_declaration
-
-function                    : "function" "main" "(" arguments ")" ":" type _NL+ [_INDENT block+ _DEDENT]        -> main_function
-                            | "function" identifier "(" arguments ")" ":" type _NL+ [_INDENT block+ _DEDENT]    -> function
-                            | "declare" identifier "(" arguments ")" ":" type semicolon                         -> function_declare
-
-when_statement              : "when" value _NL+ [_INDENT block+ _DEDENT]
-
-default_statement           : "default" _NL+ [_INDENT block+ _DEDENT]
-
-condition                   : value comparison_operator value
-                            | value
-
-logical_operator            : /and/
-                            | /or/
-
-comparison_operator         : /is/      
-                            | /not/      
-                            | /greater/  
-                            | /less/     
-                            | /\>\=/    
-                            | /\<\=/
-
-parameters                  : value ("," value)*
-
-assign_operator             : /\=/
-                            | /\+\=/
-                            | /\-\=/
-                            | /\*\=/
-                            | /\/\=/
-                            | /\%\=/
-
-overflow_operator           : /\<\</
-                            | /\>\>/
-
-arguments                   : "void" -> no_arguments
-                            | argument ("," argument)*
-
-argument                    : identifier ":" type   
-
-value                       : arithmetic
-                            | string
-                            | number
-                            | bool
-                            | call 
+value                       : STRING
+                            | SIGNED_NUMBER
+                            | SIGNED_FLOAT
                             | identifier
 
-arithmetic                  : value (arithmetic_sign value)+
+builtin_spell: NAME
+custom_spell: STRING
 
-arithmetic_sign             : /\+/
-                            | /\-/ 
-                            | /\//
-                            | /\*/ 
-                            | /\%/ 
+type: NAME
+identifier: NAME
 
-identifier                  : /[\&][a-zA-Z0-9]*/
-                            | CNAME
+newline: _NEWLINE
+indent: _INDENT
+dedent: _DEDENT
+end_block: [dedent | newline]
 
-type                        : /[a-zA-Z0-9]+[\*]?[\&]?/
-                            
+NAME: /[a-zA-Z_]\w*/ 
+COMMENT: /#[^\n]*/
+_NEWLINE: ( /(\r?\n[\t ]*)+/ | COMMENT )+
 
-string                      : /\'.*\'/ -> apostrophe_string
-                            | /\".*\"/ -> ellipsis_string
+STRING : /\"[^\n]*\"/
 
-number                      : SIGNED_NUMBER
-                            | SIGNED_FLOAT
-
-bool                        : /true/
-                            | /false/
-
-array_size                  : SIGNED_NUMBER
-
-semicolon                   : ";"
-
-COMMENT             : "#" /[^\n]/*
-
+%ignore /[\t \f]+/  // WS
+%ignore /\\[\t \f]*\r?\n/   // LINE_CONT
+%import common.WS_INLINE
 %import common.SIGNED_NUMBER
 %import common.SIGNED_FLOAT
-%import common.CNAME
-%import common.WS_INLINE
-%declare _INDENT _DEDENT
 %ignore WS_INLINE
 %ignore COMMENT
-
-_NL: /(\r?\n[\t ]*)+/
+%declare _INDENT _DEDENT

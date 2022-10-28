@@ -1,6 +1,0 @@
-function main(argc: number, argv: string): void
-    while 1 less 10
-        done;
-
-    for let i: number = 0, i less 10, i++
-        skip;

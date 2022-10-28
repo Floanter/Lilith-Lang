@@ -1,0 +1,4 @@
+
+
+function main (): void
+    let number: int = 10

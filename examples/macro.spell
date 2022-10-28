@@ -1,7 +1,0 @@
-void main ->
-    newmacro MYARRAYLENGTH 20 end
-
-    newmacro SUPERFUNTION(value) do 
-        run!;
-    end
-end
