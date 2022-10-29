@@ -2,28 +2,61 @@ file                        : newline* (block end_block)+
 
 block                       : import
                             | special_words
+                            | return
+                            | call
                             | function
+                            | variable_reassign
                             | variable_creation
 
-import                      : "using:" newline indent (builtin_spell | custom_spell) (newline (builtin_spell | custom_spell))* end_block
+import                      : "spells"   newline indent (builtin_spell | custom_spell) (newline (builtin_spell | custom_spell))* end_block
+                            | "includec" newline indent (builtin_c | header_c) (newline (builtin_c | header_c))* end_block -> c_include
 
-function                    : "function" "main" "(" ")" ":" "void" newline indent block+ end_block      -> main_function
-                            | "function" identifier "(" ")" ":" type newline indent block+ end_block    -> function_definition
-                            | "declare" identifier "(" ")" ":" type end_block                           -> function_declaretion
+function                    : "function" "main"     "(" arguments ")" ":" "void" newline indent block+ end_block      -> main_function
+                            | "function" identifier "(" arguments ")" ":" type   newline indent block+ end_block      -> function_definition
+                            | "declare"  identifier "(" arguments ")" ":" type   end_block                            -> function_declaretion
 
-variable_creation           : variable_type             -> var_declaration
-                            | variable_type "=" value   -> var_declaration_assign
+return                      : "return" value
 
-variable_type               : "let" identifier ":" type     -> normal_var_type
-                            | "const" identifier ":" type   -> const_var_type
-                            | "static" identifier ":" type  -> static_var_type
+call                        : identifier "!" 
+                            | identifier "(" parameters ")" -> call_params
+
+variable_reassign           : identifier reassign_operator
+                            | identifier reassign_operator value -> variable_reassign_value
+
+variable_creation           : variable_type end_block                                                           -> var_declaration
+                            | variable_type "=" value ("," value)* end_block    -> var_declaration_assign
+
+variable_type               : "let"    identifier ":" type("[" size "]")*   -> normal_var_type
+                            | "const"  identifier ":" type("[" size "]")*   -> const_var_type
+                            | "static" identifier ":" type("[" size "]")*   -> static_var_type
 
 special_words               : "pass" -> pass
+
+reassign_operator           : /\=/ | /\+\=/ | /\-\=/ | /\*\=/ | /\%\=/ | /\/\=/ | /\+\+/ | /\-\-/
+
 
 value                       : STRING
                             | SIGNED_NUMBER
                             | SIGNED_FLOAT
+                            | first_value next_value -> arithmetic
+                            | call
+                            | "[" value ("," value)* "]" -> array
                             | identifier
+
+parameters                  : value ("," value)*
+
+arguments                   : argument ("," argument)*
+argument                    : "void" -> argument_void
+                            | identifier ":" type
+
+arithmetic_operator         : ( /\+/ | /\-/ | /\*/ | /\// | /\%/ ) -> sign
+first_value                 : SIGNED_FLOAT | SIGNED_NUMBER | NAME 
+next_value                  : (arithmetic_operator ( SIGNED_FLOAT | SIGNED_NUMBER | identifier ))+
+
+size: SIGNED_NUMBER
+
+builtin_c: NAME
+header_c: STRING
 
 builtin_spell: NAME
 custom_spell: STRING
@@ -36,7 +69,7 @@ indent: _INDENT
 dedent: _DEDENT
 end_block: [dedent | newline]
 
-NAME: /[a-zA-Z_]\w*/ 
+NAME: /\&?[a-zA-Z_]\w*\&?\*?/ 
 COMMENT: /#[^\n]*/
 _NEWLINE: ( /(\r?\n[\t ]*)+/ | COMMENT )+
 

@@ -1,4 +1,2 @@
-
-
-function main (): void
-    let number: int = 10
+function main(void): void
+    let reference: int[2][2] = [[2], 2]
