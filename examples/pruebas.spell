@@ -1,2 +1,2 @@
-function main(argc: int, argv: vector<string>): void
+function sum(x: int, y: int): int
     pass

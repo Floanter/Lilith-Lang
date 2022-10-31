@@ -14,12 +14,12 @@ class CodeConverter():
 
     def run(self, tokens):
         self.file += self._file(tokens)
+        #print(self.file)
 
     def _file(self, blocks):
         file = ''
         for block in blocks.children:
             file  += self._block(block)
-
         return file
 
     def _block(self, blocks):
@@ -43,6 +43,8 @@ class CodeConverter():
                 #          FUNCTIONS       #
                 if blockType == 'main_function':
                     block += self._main_function(b)
+                if blockType == 'function_definition':
+                    block += self._function_definition(b)
                 #          FUNCTIONS       #
 
         return block
@@ -121,12 +123,32 @@ class CodeConverter():
     ################################################################
     def _main_function(self, blocks):
         arguments = ''
+        inside = ''
         for b in blocks.children:
             if hasattr(b, 'data'):
                 blockType = b.data
                 #print(blockType)
                 if blockType == 'arguments':
                     arguments += self._arguments(b)
+
+                if blockType == 'block':
+                    inside += self._block(b)
+        return self.templates.mainLilith(arguments, inside)
+
+    def _function_definition(self, blocks):
+        type = ''
+        identifier = ''
+        arguments = ''
+        inside = ''
+        for b in blocks.children:
+            if hasattr(b, 'data'):
+                blockType = b.data
+                print(blockType)
+                if blockType == 'arguments':
+                    arguments += self._arguments(b)
+
+                if blockType == 'block':
+                    inside += self._block(b)
         return ''
 
     def _arguments(self, blocks):
@@ -137,8 +159,9 @@ class CodeConverter():
                 #print(blockType)
                 if blockType == 'argument':
                     arguments.append(self._argument(b))
-                
-        return ''
+        if len(arguments) < 1:
+            return ''
+        return self.templates.arguments(arguments)
 
     def _argument(self, blocks):
         identifier = ''
@@ -155,8 +178,8 @@ class CodeConverter():
 
                 if blockType == 'embed_type':
                     type += self._embed_type(b)
-                
-        return ''
+       
+        return self.templates.argument(type, identifier)
     ################################################################
     ################################################################
     #                         FUNCTION                             #
@@ -167,7 +190,7 @@ class CodeConverter():
 
     ################################################################
     ################################################################
-    #                       IDENTIFIER                             #
+    #                           VALUES                             #
     ################################################################
     ################################################################
     def _identifier(self, blocks):
@@ -191,9 +214,9 @@ class CodeConverter():
                     embed_type += et
             else:
                 type += t
-        return f'{type}"<{embed_type}>'
+        return f'{type}<{embed_type}>'
     ################################################################
     ################################################################
-    #                       IDENTIFIER                             #
+    #                           VALUES                             #
     ################################################################
     ################################################################
