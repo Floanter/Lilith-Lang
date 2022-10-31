@@ -3,6 +3,7 @@ file                        : newline* (block end_block)+
 block                       : import
                             | special_words
                             | return
+                            | conditional
                             | call
                             | function
                             | variable_reassign
@@ -16,6 +17,19 @@ function                    : "function" "main"     "(" arguments ")" ":" "void"
                             | "declare"  identifier "(" arguments ")" ":" type   end_block                            -> function_declaretion
 
 return                      : "return" value
+
+conditional                 : "if" condition (logical_operator condition)* "then" newline indent block+ end_block                                               -> if_condition
+                            | "unless" condition (logical_operator condition)* "then" newline indent block+ end_block                                           -> unless_condition
+                            | "if" condition (logical_operator condition)* "then" newline indent block+ newline dedent "else" newline indent block+ end_block   -> if_else_condition
+                            | "unless" condition (logical_operator condition)* "then" newline indent block+ newline dedent "else" newline indent block+ end_block   -> unless_else_condition
+                            | "switch" value newline indent switch_condition (newline dedent switch_condition)* newline dedent switch_default end_block
+
+switch_condition            : "when" value newline indent block+ 
+
+switch_default              : "default" newline indent block+
+
+condition                   : value condition_operator value
+                            | value
 
 call                        : identifier "!" 
                             | identifier "(" parameters ")" -> call_params
@@ -31,6 +45,17 @@ variable_type               : "let"    identifier ":" type("[" size "]")*   -> n
                             | "static" identifier ":" type("[" size "]")*   -> static_var_type
 
 special_words               : "pass" -> pass
+                            | "stop" -> break
+
+logical_operator            : "and" -> and_logical
+                            | "or" -> or_logical
+
+condition_operator          : "is"      -> equal_comparison
+                            | "not"     -> not_comparison
+                            | "less"    -> less_comparison
+                            | "greater" -> greater_comparison
+                            | ">="      -> greater_equal_comparison
+                            | "<="      -> less_equal_comparison
 
 reassign_operator           : /\=/ | /\+\=/ | /\-\=/ | /\*\=/ | /\%\=/ | /\/\=/ | /\+\+/ | /\-\-/
 
@@ -61,7 +86,9 @@ header_c: STRING
 builtin_spell: NAME
 custom_spell: STRING
 
-type: NAME
+type: NAME 
+    | NAME "<"embed_type">" -> embed_type
+embed_type: NAME
 identifier: NAME
 
 newline: _NEWLINE
