@@ -1,2 +1,2 @@
-function sum(x: int, y: int): int
-    pass
+if 2 greater 1 or 1 less 2 then
+    run!

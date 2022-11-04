@@ -14,7 +14,7 @@ import                      : "spells"   newline indent (builtin_spell | custom_
 
 function                    : "function" "main"     "(" arguments ")" ":" "void" newline indent block+ end_block      -> main_function
                             | "function" identifier "(" arguments ")" ":" type   newline indent block+ end_block      -> function_definition
-                            | "declare"  identifier "(" arguments ")" ":" type   end_block                            -> function_declaretion
+                            | "declare"  identifier "(" arguments ")" ":" type   end_block                            -> function_declaration
 
 return                      : "return" value
 
@@ -34,10 +34,10 @@ condition                   : value condition_operator value
 call                        : identifier "!" 
                             | identifier "(" parameters ")" -> call_params
 
-variable_reassign           : identifier reassign_operator
-                            | identifier reassign_operator value -> variable_reassign_value
+variable_reassign           : identifier reassign_operator          -> var_reassign
+                            | identifier reassign_operator value    -> var_reassign_value
 
-variable_creation           : variable_type end_block                                                           -> var_declaration
+variable_creation           : variable_type end_block                           -> var_declaration
                             | variable_type "=" value ("," value)* end_block    -> var_declaration_assign
 
 variable_type               : "let"    identifier ":" type("[" size "]")*   -> normal_var_type
@@ -63,7 +63,7 @@ reassign_operator           : /\=/ | /\+\=/ | /\-\=/ | /\*\=/ | /\%\=/ | /\/\=/ 
 value                       : STRING
                             | SIGNED_NUMBER
                             | SIGNED_FLOAT
-                            | first_value next_value -> arithmetic
+                            | first_value arith_value -> arithmetic
                             | call
                             | "[" value ("," value)* "]" -> array
                             | identifier
@@ -75,8 +75,8 @@ argument                    : "void" -> argument_void
                             | identifier ":" type
 
 arithmetic_operator         : ( /\+/ | /\-/ | /\*/ | /\// | /\%/ ) -> sign
-first_value                 : SIGNED_FLOAT | SIGNED_NUMBER | NAME 
-next_value                  : (arithmetic_operator ( SIGNED_FLOAT | SIGNED_NUMBER | identifier ))+
+first_value                 : SIGNED_FLOAT | SIGNED_NUMBER | NAME | call
+arith_value                 : (arithmetic_operator ( SIGNED_FLOAT | SIGNED_NUMBER | NAME | call))+
 
 size: SIGNED_NUMBER
 
