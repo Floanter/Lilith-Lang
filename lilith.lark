@@ -1,61 +1,8 @@
 file                        : newline* (block end_block)+
 
-block                       : import
-                            | special_words
-                            | return
-                            | conditional
-                            | call
-                            | function
-                            | variable_reassign
-                            | variable_creation
+block                       : variable
 
-import                      : "spells"   newline indent (builtin_spell | custom_spell) (newline (builtin_spell | custom_spell))* end_block
-                            | "includec" newline indent (builtin_c | header_c) (newline (builtin_c | header_c))* end_block -> c_include
-
-function                    : "function" "main"     "(" arguments ")" ":" "void" newline indent block+ end_block      -> main_function
-                            | "function" identifier "(" arguments ")" ":" type   newline indent block+ end_block      -> function_definition
-                            | "declare"  identifier "(" arguments ")" ":" type   end_block                            -> function_declaration
-
-return                      : "return" value
-
-conditional                 : "if" condition (logical_operator condition)* "then" newline indent block+ end_block                                               -> if_condition
-                            | "unless" condition (logical_operator condition)* "then" newline indent block+ end_block                                           -> unless_condition
-                            | "if" condition (logical_operator condition)* "then" newline indent block+ newline dedent "else" newline indent block+ end_block   -> if_else_condition
-                            | "unless" condition (logical_operator condition)* "then" newline indent block+ newline dedent "else" newline indent block+ end_block   -> unless_else_condition
-                            | "switch" value newline indent switch_condition (newline dedent switch_condition)* newline dedent switch_default end_block
-
-switch_condition            : "when" value newline indent block+ 
-
-switch_default              : "default" newline indent block+
-
-condition                   : value condition_operator value
-                            | value
-
-call                        : identifier "!" 
-                            | identifier "(" parameters ")" -> call_params
-
-variable_reassign           : identifier reassign_operator          -> var_reassign
-                            | identifier reassign_operator value    -> var_reassign_value
-
-variable_creation           : variable_type end_block                           -> var_declaration
-                            | variable_type "=" value ("," value)* end_block    -> var_declaration_assign
-
-variable_type               : "let"    identifier ":" type("[" size "]")*   -> normal_var_type
-                            | "const"  identifier ":" type("[" size "]")*   -> const_var_type
-                            | "static" identifier ":" type("[" size "]")*   -> static_var_type
-
-special_words               : "pass" -> pass
-                            | "stop" -> break
-
-logical_operator            : "and" -> and_logical
-                            | "or" -> or_logical
-
-condition_operator          : "is"      -> equal_comparison
-                            | "not"     -> not_comparison
-                            | "less"    -> less_comparison
-                            | "greater" -> greater_comparison
-                            | ">="      -> greater_equal_comparison
-                            | "<="      -> less_equal_comparison
+variable                    : identifier ":" type "=" value ";"
 
 reassign_operator           : /\=/ | /\+\=/ | /\-\=/ | /\*\=/ | /\%\=/ | /\/\=/ | /\+\+/ | /\-\-/
 
@@ -63,9 +10,8 @@ reassign_operator           : /\=/ | /\+\=/ | /\-\=/ | /\*\=/ | /\%\=/ | /\/\=/ 
 value                       : STRING
                             | SIGNED_NUMBER
                             | SIGNED_FLOAT
-                            | first_value arith_value -> arithmetic
-                            | call
-                            | "[" value ("," value)* "]" -> array
+                            | /true/    -> boolean
+                            | /false/   -> boolean
                             | identifier
 
 parameters                  : value ("," value)*
@@ -75,16 +21,8 @@ argument                    : "void" -> argument_void
                             | identifier ":" type
 
 arithmetic_operator         : ( /\+/ | /\-/ | /\*/ | /\// | /\%/ ) -> sign
-first_value                 : SIGNED_FLOAT | SIGNED_NUMBER | NAME | call
-arith_value                 : (arithmetic_operator ( SIGNED_FLOAT | SIGNED_NUMBER | NAME | call))+
 
 size: SIGNED_NUMBER
-
-builtin_c: NAME
-header_c: STRING
-
-builtin_spell: NAME
-custom_spell: STRING
 
 type: NAME 
     | NAME "<"embed_type">" -> embed_type
