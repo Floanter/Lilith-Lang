@@ -11,6 +11,7 @@ class CodeConverter():
         self.templates = Template()
 
     def run(self, tokens):
+        self.file += self.templates.requiredImports()
         self.file += self._file(tokens)
         if self.mainFunctionExists:
             pass
@@ -32,6 +33,9 @@ class CodeConverter():
                 #          VARIABLES       #
                 if blockType == 'variable':
                     block += self._variable(b)
+
+                if blockType == 'array':
+                    block += self._array(b)
                 #          VARIABLES       #
 
         return block
@@ -108,6 +112,25 @@ class CodeConverter():
         
         return self.templates.variable(identifier, type, value)
 
+    def _array(self, tokens):
+        identifier = ''
+        type = ''
+        array_sizes = ''
+        values = ''
+
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+
+            if tokentype == 'identifier':
+                identifier += self._identifier(token)
+            if tokentype == 'type':
+                type == self._type(token)
+            if tokentype == 'array_size':
+                array_sizes += self._array_size(token)
+            if tokentype == 'array_values':
+                values += self._array_values(token)
+        return ''
     ################################################################
     ################################################################
     #                           VALUES                             #
@@ -118,6 +141,23 @@ class CodeConverter():
         for i in blocks.children:
             identifier += i
         return identifier
+
+    def _array_values(self, tokens):
+        values = []
+        for t in tokens.children:
+            tokentype = t.data
+            #print(tokentype)
+            if tokentype == 'value':
+                values.append(self._value(t))
+        return self.templates.array_values(values)
+
+    def _array_size(self, tokens):
+        size = ''
+        for t in tokens.children:
+            #print(t)
+            size += t
+
+        return size
 
     def _value(self, blocks):
         value = ''

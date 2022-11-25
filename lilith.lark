@@ -3,6 +3,7 @@ file                        : newline* (block end_block)+
 block                       : variable
 
 variable                    : identifier ":" type "=" value ";"
+                            | identifier ":" type array_size+ "=" newline indent value (("," | newline) value )*  ";" end_block -> array
 
 reassign_operator           : /\=/ | /\+\=/ | /\-\=/ | /\*\=/ | /\%\=/ | /\/\=/ | /\+\+/ | /\-\-/
 
@@ -10,8 +11,9 @@ reassign_operator           : /\=/ | /\+\=/ | /\-\=/ | /\*\=/ | /\%\=/ | /\/\=/ 
 value                       : STRING
                             | SIGNED_NUMBER
                             | SIGNED_FLOAT
-                            | /true/    -> boolean
-                            | /false/   -> boolean
+                            | /true/                                    -> boolean
+                            | /false/                                   -> boolean
+                            | "[" value (("," | newline) value)* "]"    -> array_values
                             | identifier
 
 parameters                  : value ("," value)*
@@ -24,8 +26,11 @@ arithmetic_operator         : ( /\+/ | /\-/ | /\*/ | /\// | /\%/ ) -> sign
 
 size: SIGNED_NUMBER
 
+array_size: /\[/ SIGNED_NUMBER? /\]/
+
 type: NAME 
     | NAME "<"embed_type">" -> embed_type
+
 embed_type: NAME
 identifier: NAME
 

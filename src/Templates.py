@@ -1,7 +1,7 @@
 class Template:
 
     def requiredImports(self):
-        return f''
+        return f'#include <stdio.h>\n'
     ################################################################
     ################################################################
     #                           functio                             #
@@ -54,6 +54,9 @@ class Template:
     ################################################################
     def variable(self, identifier, type, value):
         return f'{type} {identifier} = {value};\n'
+
+    def array(self, identifier, type, size, value):
+        return f'{type} {identifier}{size} = {value};\n'
     ################################################################
     ################################################################
     #                         VARIABLE                             #
@@ -66,7 +69,15 @@ class Template:
     #                           VALUES                             #
     ################################################################
     ################################################################
+    def array_values(self, values: list):
+        arrayValues = f'{{{values[1]}'
 
+        if len(values ) > 1:
+            for i in range(len(values) + 1):
+                arrayValues += f'{values[i]}'
+        arrayValues += '}'
+
+        return arrayValues
     ################################################################
     ################################################################
     #                           VALUES                             #

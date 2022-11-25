@@ -1,5 +1,7 @@
 
 numberInteger: int = 10;
 numberFloat: float = 5.2;
-name: string = "Jhon";
-canPass: bool = true;
+
+numbers: char[3][2] = 
+    [1, 2]
+    [2];

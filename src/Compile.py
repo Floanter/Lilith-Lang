@@ -37,7 +37,7 @@ class Compile:
             os.mkdir(self.build_path)
 
     def _generateFile(self, file):
-        f = open(self.build_path + '/' + 'main.cpp', "w")
+        f = open(self.build_path + '/' + 'main.c', "w")
         f.write(file)
         f.close()
 
