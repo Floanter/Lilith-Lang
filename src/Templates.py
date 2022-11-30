@@ -2,11 +2,6 @@ class Template:
 
     def requiredImports(self):
         return f'#include <stdio.h>\n'
-    ################################################################
-    ################################################################
-    #                           functio                             #
-    ################################################################
-    ################################################################
     
     ################################################################
     ################################################################
@@ -19,11 +14,16 @@ class Template:
     #                         FUNCTION                             #
     ################################################################
     ################################################################
-    def mainLilith(self, arguments, inside):
-        function = f'void _MaInLiLith_({arguments})\n{{\n{inside}\n}}\n'
-        return function
+    def cMain(self):
+        return 'int main(int argc, char* argv[]) {\n    _MAINLILITHFUNC_(argc, argv);\n}' 
 
-   
+    def function(self, fn):
+        if fn["block"] == '':
+            return f'{fn["type"]} {fn["identifier"]}({fn["parameters"]});\n'
+        return f'{fn["type"]} {fn["identifier"]}({fn["parameters"]})\n{{\n{fn["block"]}}}\n'
+
+    def call(self, c):
+        return f'{c["identifier"]}({c["call_params"]});\n'
     ################################################################
     ################################################################
     #                         FUNCTION                             #
@@ -37,14 +37,49 @@ class Template:
     #                        CONDITIONAL                           #
     ################################################################
     ################################################################
-    
+    def ift(self, i):
+        ift = f'if ({i["condition"]})\n{{\n{i["block"]}}}'
+        if i['elif'] != '':
+            ift += f'{i["elif"]}'
+        if i['else'] != '':
+            ift += f'{i["else"]}'
+        ift += '\n'
+        return ift
+    def elift(self, eli):
+        return f' else if ({eli["condition"]})\n{{\n{eli["block"]}}}'
+    def elset(self, block):
+        return f' else\n{{\n{block}}}'
+
+    def switch(self, switch):
+        return f'switch ({switch["expression"]})\n{{\n{switch["when"]}{switch["default"]}}}\n'
+
+    def when(self, case):
+        return f'case {case["condition"]}:\n{case["block"]}break;\n'
+
+    def default(self, block):
+        return f'default:\n{block}'
     ################################################################
     ################################################################
     #                        CONDITIONAL                           #
     ################################################################
     ################################################################
 
-
+    ################################################################
+    ################################################################
+    #                            LOOPS                             #
+    ################################################################
+    ################################################################
+    def whilet(self, w):
+        return f'while ({w["condition"]})\n{{\n{w["block"]}}}\n'
+    def doWhile(self, w):
+        return f'do\n{{\n{w["block"]}}}\nwhile ({w["condition"]});\n'
+    def fort(self, f):
+        return f'for ({f["variable"][0]} {f["condition"]}; {f["variable"][1]})\n{{\n{f["block"]}}}\n'
+    ################################################################
+    ################################################################
+    #                            LOOPS                             #
+    ################################################################
+    ################################################################
 
 
     ################################################################
@@ -52,11 +87,10 @@ class Template:
     #                         VARIABLE                             #
     ################################################################
     ################################################################
-    def variable(self, identifier, type, value):
-        return f'{type} {identifier} = {value};\n'
 
-    def array(self, identifier, type, size, value):
-        return f'{type} {identifier}{size} = {value};\n'
+    def variable(self, var):
+        return f'{var["special_word"]}{var["type"]} {var["identifier"]}{var["array_size"]}{var["assignment"]}{var["value"]};\n'
+
     ################################################################
     ################################################################
     #                         VARIABLE                             #
@@ -70,14 +104,20 @@ class Template:
     ################################################################
     ################################################################
     def array_values(self, values: list):
-        arrayValues = f'{{{values[1]}'
-
+        arrayValues = '{'
+        arrayValues += f'{values[0]}'
         if len(values ) > 1:
-            for i in range(len(values) + 1):
-                arrayValues += f'{values[i]}'
+            for i in range(1, len(values)):
+                arrayValues += f', {values[i]}'
         arrayValues += '}'
-
         return arrayValues
+    
+    def parameters(self, parameters: list):
+        params = f'{parameters[0]}'
+        if len(parameters) > 1:
+            for i in range(1, len(parameters)):
+                params += f', {parameters[i]}'
+        return params
     ################################################################
     ################################################################
     #                           VALUES                             #

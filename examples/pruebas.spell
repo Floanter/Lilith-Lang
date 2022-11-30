@@ -1,7 +1,6 @@
+function other (): void
+    let x: int = 10;
 
-numberInteger: int = 10;
-numberFloat: float = 5.2;
-
-numbers: char[3][2] = 
-    [1, 2]
-    [2];
+    let i: int;  
+    for i = 0; i <= x; i++;
+        i++;

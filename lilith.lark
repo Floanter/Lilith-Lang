@@ -1,37 +1,106 @@
 file                        : newline* (block end_block)+
 
-block                       : variable
+block                       : reserved end_block
+                            | for
+                            | while
+                            | switch
+                            | if
+                            | call ";" end_block
+                            | function
+                            | variable ";" end_block
 
-variable                    : identifier ":" type "=" value ";"
-                            | identifier ":" type array_size+ "=" newline indent value (("," | newline) value )*  ";" end_block -> array
+reserved                    : "pass" ";" -> ignore
+                            | "stop" ";" -> break
+                            | "skip" ";" -> continue
+                            | "return" (value | operator | array_values)+ ";" -> return
 
-reassign_operator           : /\=/ | /\+\=/ | /\-\=/ | /\*\=/ | /\%\=/ | /\/\=/ | /\+\+/ | /\-\-/
+for                         : "for" variable ";" condition (logical_op condition)* ";" variable ";" newline+ indent block+ end_block
 
+while                       : "while" condition (logical_op condition)* newline+ indent block+ end_block
+                            | "do" newline+ indent block+ end_block "while" condition (logical_op condition)* ";" end_block -> do_while
+
+switch                      : "switch" (value | operator)+ newline+ indent when+ default? end_block
+
+when                        : "when" (value | operator | compare_op)+ newline+ indent block+ end_block
+
+default                     : "default" newline+ indent block+ end_block
+
+if                          : "if" condition (logical_op condition)* newline+ indent block+ elif* else? end_block
+
+elif                        : end_block "elif" condition (logical_op condition)* newline+ indent block+
+
+else                        : end_block "else" newline+ indent block+
+
+logical_op                  : "and" -> and
+                            | "or"  -> or
+
+condition                   : (value | operator | array_values) compare_op (value | operator | array_values) 
+
+compare_op                  : "==" -> equal_to
+                            | "!=" -> not_equal
+                            | ">"  -> greater
+                            | "<"  -> less
+                            | ">=" -> greater_equal
+                            | "<=" -> less_equal 
+
+call                        : identifier "(" call_params ")"
+                            | identifier "!"
+
+call_params                 : call_param ("," call_param)*
+call_param                  : value | operator | array_values
+
+function                    : "function" identifier "(" parameters? ")" ":" type newline+ indent block+ end_block
+
+parameters                  : parameter ("," parameter)*
+
+parameter                   : identifier ":" type array_size*
+
+variable                    : identifier assignment
+                            | identifier array_size+ assignment (newline indent)? (value | operator | array_values)+
+                            | identifier assignment (newline indent)? (value | operator | array_values)+
+                            | special_word+ identifier ":" type 
+                            | special_word+ identifier ":" type array_size+
+                            | special_word+ identifier ":" type assignment (newline indent)? (value | operator)+
+                            | special_word+ identifier ":" type array_size+ assignment (newline indent)? (value | operator | array_values)+
+
+special_word                : "const"   -> const
+                            | "static"  -> static
+                            | "let"     -> ignore
+
+array_values                : "[" (value | array_values | operator) (("," | newline) (value | array_values | operator))* "]" 
 
 value                       : STRING
                             | SIGNED_NUMBER
                             | SIGNED_FLOAT
-                            | /true/                                    -> boolean
-                            | /false/                                   -> boolean
-                            | "[" value (("," | newline) value)* "]"    -> array_values
                             | identifier
+                            | identifier array_size+
+                            | call         
 
-parameters                  : value ("," value)*
+operator                    : operators
 
-arguments                   : argument ("," argument)*
-argument                    : "void" -> argument_void
-                            | identifier ":" type
+assignment                  : operators
 
-arithmetic_operator         : ( /\+/ | /\-/ | /\*/ | /\// | /\%/ ) -> sign
+operators                   : "+"   -> plus
+                            | "++"  -> plusplus
+                            | "--"  -> minusminus
+                            | "-"   -> minus
+                            | "*"   -> multi
+                            | "/"   -> divide
+                            | "%"   -> percent
+                            | "="   -> equal
+                            | "+="  -> plus_equal
+                            | "-="  -> minus_equal
+                            | "*="  -> multi_equal
+                            | "/="  -> divide_equal
+                            | "%="  -> percent_equal
+                            | "|="  -> or_equal
+                            | "^="  -> power_equal
+                            | "("   -> left_parent
+                            | ")"   -> right_parent
 
-size: SIGNED_NUMBER
-
-array_size: /\[/ SIGNED_NUMBER? /\]/
+array_size                  : "[" (value | operator)* "]"
 
 type: NAME 
-    | NAME "<"embed_type">" -> embed_type
-
-embed_type: NAME
 identifier: NAME
 
 newline: _NEWLINE
@@ -39,11 +108,12 @@ indent: _INDENT
 dedent: _DEDENT
 end_block: [dedent | newline]
 
-NAME: /\&?[a-zA-Z_]\w*\&?\*?/ 
+NAME: /\&?\**[a-zA-Z_]\w*\&?\*?/ 
 COMMENT: /#[^\n]*/
 _NEWLINE: ( /(\r?\n[\t ]*)+/ | COMMENT )+
 
 STRING : /\"[^\n]*\"/
+       | /\'[^\n]*\'/
 
 %ignore /[\t \f]+/  // WS
 %ignore /\\[\t \f]*\r?\n/   // LINE_CONT

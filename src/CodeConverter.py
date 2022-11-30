@@ -10,11 +10,121 @@ class CodeConverter():
         self.parser = LilithParser()
         self.templates = Template()
 
+        self.operators = {
+            'equal':            ' = ',
+            "plus":             ' + ',
+            'plusplus':         '++',
+            'minusminus':       '--',
+            'minus':            ' - ',
+            'multi':            ' * ',
+            'divide':           ' / ',
+            'percent':          ' % ',
+            'plus_equal':       ' += ',
+            'minus_equal':      ' -= ',
+            'multi_equal':      ' *= ',
+            'percent_equal':    ' %= ',
+            'or_equal':         ' |= ',
+            'power_equal':      " ^= ",
+            'left_parent':      '(',
+            'right_parent':     ')',
+            'and':              ' && ',
+            'or':               ' || ',
+            'equal_to':         ' == ',
+            'not_equal':        ' != ',
+            'greater':          ' > ',
+            'less':             ' < ',
+            'greater_equal':    ' >= ',
+            'less_equal':       ' <= '
+        }
+
+        self.special_word = {
+            'const': 'const ',
+            'static': 'static '
+        }
+
+        self.reserved_word = {
+            'break': 'break;\n',
+            'continue': 'continue;\n'
+        }
+
+        self._block_commands = {
+            'variable': self._variable,
+            'mainfn': self._mainFunction,
+            'function': self._function,
+            'return': self._return,
+            'call': self._call,
+            'if': self._if,
+            'switch': self._switch,
+            'while': self._while,
+            'do_while': self._do_while,
+            'for': self._for
+        }
+
+        self._variable_commands = {
+            'identifier': self._value,
+            'type': self._value,
+            'value': self._value,
+            'array_size': self._value,
+            'array_values': self._array_values,
+            'operator': self._value,
+            'assignment': self._value
+        }
+
+        self._function_commands = {
+            'type': self._value,
+            'identifier': self._value,
+            'parameters': self._parameters,
+            'block': self._block
+        }
+
+        self._if_commands = {
+            'condition': self._value,
+            'block': self._block,
+            'elif': self._elif,
+            'else': self._else
+        }
+
+        self._elif_commands = {
+            'condition': self._value,
+            'block': self._block
+        }
+
+        self._switch_commands = {
+            'value': self._value,
+            'operator': self._value,
+            'when': self._when,
+            'default': self._default
+        }
+
+        self._when_commands = {
+            'value': self._value,
+            'operator': self._value,
+            'block': self._block
+        }
+
+        self._while_commands = {
+            'condition': self._value,
+            'block': self._block
+        }
+
+        self._for_commands = {
+            'variable': self._variable,
+            'condition': self._value,
+            'block': self._block
+        }
+
+        self._value_command = {
+            'value': self._value,
+            'identifier': self._value,
+            'operator': self._value,
+            'call': self._call
+        }
+
     def run(self, tokens):
         self.file += self.templates.requiredImports()
         self.file += self._file(tokens)
         if self.mainFunctionExists:
-            pass
+            self.file += self.templates.cMain()
         #print(self.file)
 
     def _file(self, blocks):
@@ -29,15 +139,10 @@ class CodeConverter():
             if hasattr(b, 'data'):
                 blockType = b.data
                 #print(blockType)              
-
-                #          VARIABLES       #
-                if blockType == 'variable':
-                    block += self._variable(b)
-
-                if blockType == 'array':
-                    block += self._array(b)
-                #          VARIABLES       #
-
+                if blockType in self._block_commands:
+                    block += self._block_commands[blockType](b)
+                elif blockType in self.reserved_word:
+                    block += self.reserved_word[blockType]
         return block
 
     ################################################################
@@ -59,7 +164,51 @@ class CodeConverter():
     #                         FUNCTION                             #
     ################################################################
     ################################################################
-    
+    def _mainFunction(self, tokens):
+        self.mainFunctionExists = True
+        inside = ''
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype == 'block':
+                inside += self._block(token)
+        return self.templates.mainLilith(inside)
+
+    def _function(self, tokens):
+        function = {
+            'type': '',
+            'identifier': '',
+            'parameters': '',
+            'block': ''
+        }
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype in self._function_commands:
+                if tokentype == 'identifier':
+                    tempIdentifier = self._function_commands[tokentype](token)
+                    if tempIdentifier == 'main':
+                        self.mainFunctionExists = True
+                        function['identifier'] += '_MAINLILITHFUNC_'
+                    else:
+                        function['identifier'] += tempIdentifier
+                else:
+                    function[tokentype] += self._function_commands[tokentype](token)
+        return self.templates.function(function)
+
+    def _call(self, tokens):
+        call = {
+            'identifier': '',
+            'call_params': ''
+        }
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype == 'identifier':
+                call['identifier'] += self._value(token)
+            elif tokentype == 'call_params':
+                call['call_params'] += self._call_params(token)
+        return self.templates.call(call)
     ################################################################
     ################################################################
     #                         FUNCTION                             #
@@ -72,75 +221,206 @@ class CodeConverter():
     #                        CONDITIONAL                           #
     ################################################################
     ################################################################
-    
+    def _if(self, tokens):
+        i = {
+            'condition': '',
+            'block': '',
+            'elif': '',
+            'else': ''
+        }
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype in self._if_commands:
+                i[tokentype] += self._if_commands[tokentype](token)
+            elif tokentype in self.operators:
+                i['condition'] += self.operators[tokentype]
+        #print(i)
+        return self.templates.ift(i)
+
+    def _elif(self, tokens):
+        eli = {
+            'condition': '',
+            'block': ''
+        }
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype in self._elif_commands:
+                eli[tokentype] += self._elif_commands[tokentype](token)
+            elif tokentype in self.operators:
+                eli['condition'] += self.operators[tokentype]
+        return self.templates.elift(eli)
+
+    def _else(self, tokens):
+        block = ''
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype == 'block':
+                block += self._block(token)
+        return self.templates.elset(block)
+
+    def _switch(self, tokens):
+        switch = {
+            'expression': '',
+            'when': '',
+            'default': ''
+        }
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype in self._switch_commands:
+                if tokentype == 'value' or tokentype == 'operator':
+                    switch['expression'] += self._switch_commands[tokentype](token)
+                else:
+                    switch[tokentype] += self._switch_commands[tokentype](token)
+        return self.templates.switch(switch)
+
+    def _when(self, tokens):
+        when = {
+            'condition': '',
+            'block': ''
+        }
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype in self._when_commands:
+                if tokentype == 'value' or tokentype == 'operator':
+                    when['condition'] += self._when_commands[tokentype](token)
+                elif tokentype in self.operators:
+                    when['condition'] += self.operators[tokentype]
+                else:
+                    when[tokentype] += self._when_commands[tokentype](token)
+        return self.templates.when(when)
+
+    def _default(self, tokens):
+        block = ''
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype == 'block':
+                block += self._block(token)
+        return self.templates.default(block)
     ################################################################
     ################################################################
     #                        CONDITIONAL                           #
     ################################################################
     ################################################################
-
-
-    ################################################################
-    ################################################################
-    #                         VARIABLE                             #
-    ################################################################
-    ################################################################
     
+    ################################################################
+    ################################################################
+    #                            LOOPS                             #
+    ################################################################
+    ################################################################
+    def _while(self, tokens):
+        w = {
+            'condition': '',
+            'block': ''
+        }
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype in self._while_commands:
+                w[tokentype] += self._while_commands[tokentype](token)
+            elif tokentype in self.operators:
+                w['condition'] += self.operators[tokentype]
+        return self.templates.whilet(w)
 
+    def _do_while(self, tokens):
+        w = {
+            'condition': '',
+            'block': ''
+        }
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype in self._while_commands:
+                w[tokentype] += self._while_commands[tokentype](token)
+            elif tokentype in self.operators:
+                w['condition'] += self.operators[tokentype]
+        return self.templates.doWhile(w)
+
+    def _for(self, tokens):
+        f = {
+            'variable': [],
+            'condition': '',
+            'block': ''
+        }
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype in self.operators:
+                f['condition'] += self.operators[tokentype]
+            elif tokentype in self._for_commands:
+                if tokentype == 'variable':
+                    f['variable'].append(self._for_commands[tokentype](token))
+                else:
+                    f[tokentype] += self._for_commands[tokentype](token)
+        print(f)
+        return self.templates.fort(f)
+    ################################################################
+    ################################################################
+    #                            LOOPS                             #
+    ################################################################
+    ################################################################
 
     ################################################################
     ################################################################
     #                         VARIABLE                             #
     ################################################################
     ################################################################
-
     def _variable(self, tokens):
-        identifier = ''
-        type = ''
-        value = ''
-
+        variable = {
+            'special_word': '',
+            'identifier': '',
+            'type': '',
+            'value': '',
+            'array_size': '',
+            'assignment': ''
+        }
         for token in tokens.children:
             tokentype = token.data
             #print(tokentype)
+            if tokentype in self._variable_commands:
+                if tokentype == 'array_values' or tokentype == 'operator':
+                    variable['value'] += self._variable_commands[tokentype](token)
+                elif tokentype == 'array_size':
+                    variable['value'] += '['
+                    variable['value'] += self._variable_commands[tokentype](token)
+                    variable['value'] += ']'
+                else:
+                    variable[tokentype] += self._variable_commands[tokentype](token)
+            if tokentype in self.special_word:
+                variable['special_word'] += self.special_word[tokentype]
+        return self.templates.variable(variable)
+    ################################################################
+    ################################################################
+    #                         VARIABLE                             #
+    ################################################################
+    ################################################################
 
-            if tokentype == 'identifier':
-                identifier += self._identifier(token)
-            if tokentype == 'type':
-                type += self._type(token)
-            if tokentype == 'value':
-                value += self._value(token)
-        
-        return self.templates.variable(identifier, type, value)
-
-    def _array(self, tokens):
-        identifier = ''
-        type = ''
-        array_sizes = ''
-        values = ''
-
-        for token in tokens.children:
-            tokentype = token.data
-            #print(tokentype)
-
-            if tokentype == 'identifier':
-                identifier += self._identifier(token)
-            if tokentype == 'type':
-                type == self._type(token)
-            if tokentype == 'array_size':
-                array_sizes += self._array_size(token)
-            if tokentype == 'array_values':
-                values += self._array_values(token)
-        return ''
     ################################################################
     ################################################################
     #                           VALUES                             #
     ################################################################
     ################################################################
-    def _identifier(self, blocks):
-        identifier = ''
-        for i in blocks.children:
-            identifier += i
-        return identifier
+    def _return(self, tokens):
+        ret = 'return '
+        options = ['value', 'operator']
+        for t in tokens.children:
+            tokentype = t.data
+            #print(tokentype)
+            if tokentype in options:
+                ret += self._value(t)
+        ret += ';\n'
+        return ret
+
+    def _call_params(self, tokens):
+        params = []
+        for t in tokens.children:
+            params.append(self._value(t))
+        return self.templates.parameters(params)
 
     def _array_values(self, tokens):
         values = []
@@ -149,93 +429,50 @@ class CodeConverter():
             #print(tokentype)
             if tokentype == 'value':
                 values.append(self._value(t))
+            if tokentype == 'array_values':
+                values.append(self._array_values(t))
+
         return self.templates.array_values(values)
 
-    def _array_size(self, tokens):
-        size = ''
+    def _parameters(self, tokens):
+        params = []
         for t in tokens.children:
-            #print(t)
-            size += t
+            tokentype = t.data
+            if tokentype == 'parameter':
+                params.append(self._parameter(t))
+        return self.templates.parameters(params)
 
-        return size
+    def _parameter(self, tokens):
+        identifier = ''
+        type = ''
+        for t in tokens.children:
+            tokentype = t.data
+            if tokentype == 'identifier':
+                identifier += self._value(t)
+            if tokentype == 'type':
+                type += self._value(t)
+        return f'{type} {identifier}'
 
     def _value(self, blocks):
         value = ''
+        
         for t in blocks.children:
             if hasattr(t, 'data'):
                 tokenType = t.data
                 #print(tokenType)
-                if tokenType == 'identifier':
-                    value += self._identifier(t)
-
-                if tokenType == 'call':
-                    value += self._call(t, False)
-
-                if tokenType == 'call_params':
-                    value += self._call_params(t, False)
+                if tokenType in self._value_command:
+                    value += self._value_command[tokenType](t)
+                if tokenType == 'array_size':
+                    value += '['
+                    value += self._value(t)
+                    value += ']'
+                if tokenType in self.operators:
+                    value += self.operators[tokenType]
             else:
                 #print(t)
                 value += t
         return value
 
-    def _arithmetic(self, blocks):
-        first_value = ''
-        arith_value = ''
-        for t in blocks.children:
-            if hasattr(t, 'data'):
-                tokenType = t.data
-                #print(tokenType)
-                if tokenType == 'first_value':
-                    first_value += self._value(t)
-
-                if tokenType == 'arith_value':
-                    arith_value += self._arith_value(t)
-
-        return first_value + arith_value
-
-    def _arith_value(self, blocks):
-        v = ''
-        for t in blocks.children:
-            if hasattr(t, 'data'):
-                tokenType = t.data
-                print(tokenType)
-                if tokenType == 'sign':
-                    v += self._sign(t)
-
-                if tokenType == 'call':
-                    v += self._call(t, False)
-            else:
-                v += t
-        return v
-
-    def _sign(self, blocks):
-        s = ''
-        for t in blocks.children:
-            s += t
-        return s
-
-    def _type(self, blocks):
-        type = ''
-        for t in blocks.children:
-            type += t
-        return type
-
-    def _embed_type(self, blocks):
-        type = ''
-        embed_type = ''
-        for t in blocks.children:
-            if hasattr(t, 'children'):
-                for et in t.children:
-                    embed_type += et
-            else:
-                type += t
-        return f'{type}<{embed_type}>'
-
-    def _reassign_operator(self, blocks):
-        o = ''
-        for t in blocks.children:
-            o += t
-        return o
     ################################################################
     ################################################################
     #                           VALUES                             #

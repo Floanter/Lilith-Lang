@@ -1,4 +1,12 @@
 #include <stdio.h>
-int numberInteger = 10;
-float numberFloat = 5.2;
-
+void other()
+{
+int x = 10;
+int i;
+for ( i = 0;
+ i <= x;  i++;
+)
+{
+ i++;
+}
+}
