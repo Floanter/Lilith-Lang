@@ -1,6 +1,8 @@
 file                        : newline* (block end_block)+
 
 block                       : reserved end_block
+                            | macro
+                            | interface
                             | for
                             | while
                             | switch
@@ -9,10 +11,23 @@ block                       : reserved end_block
                             | function
                             | variable ";" end_block
 
-reserved                    : "pass" ";" -> ignore
+reserved                    : "use" STRING ";"     -> local_spell
+                            | "use" identifier ";" -> lib_spell
+                            | "pass" ";" -> ignore
                             | "stop" ";" -> break
                             | "skip" ";" -> continue
+                            | "newtype" identifier ":" type ";" -> newtype
                             | "return" (value | operator | array_values)+ ";" -> return
+
+macro                       : "macro" identifier value ";" end_block
+                            | "macro" identifier "(" macro_parameter ("," macro_parameter)* ")" newline+ indent block+ end_block
+
+macro_parameter             : identifier
+
+interface                   : "interface" identifier newline+ indent property (newline property)* end_block
+
+property                    : identifier ":" type array_size* ";"
+                            | identifier "(" parameters ")" ":" type array_size* ";"
 
 for                         : "for" variable ";" condition (logical_op condition)* ";" variable ";" newline+ indent block+ end_block
 
@@ -35,6 +50,7 @@ logical_op                  : "and" -> and
                             | "or"  -> or
 
 condition                   : (value | operator | array_values) compare_op (value | operator | array_values) 
+                            | value
 
 compare_op                  : "==" -> equal_to
                             | "!=" -> not_equal
@@ -46,10 +62,10 @@ compare_op                  : "==" -> equal_to
 call                        : identifier "(" call_params ")"
                             | identifier "!"
 
-call_params                 : call_param ("," call_param)*
-call_param                  : value | operator | array_values
+call_params                 : call_param (("," | newline) call_param)*
+call_param                  : type_cast | value | operator | array_values | key_value
 
-function                    : "function" identifier "(" parameters? ")" ":" type newline+ indent block+ end_block
+function                    : "function" identifier "(" parameters? ")" ":" type array_size* newline+ indent block+ end_block
 
 parameters                  : parameter ("," parameter)*
 
@@ -68,6 +84,10 @@ special_word                : "const"   -> const
                             | "let"     -> ignore
 
 array_values                : "[" (value | array_values | operator) (("," | newline) (value | array_values | operator))* "]" 
+
+type_cast                   : "(" type ")"
+
+key_value                   : value ":" value
 
 value                       : STRING
                             | SIGNED_NUMBER
@@ -108,7 +128,7 @@ indent: _INDENT
 dedent: _DEDENT
 end_block: [dedent | newline]
 
-NAME: /\&?\**[a-zA-Z_]\w*\&?\*?/ 
+NAME: /\&?\**[a-zA-Z_\.\-\>]+\w*\&?\*?/ 
 COMMENT: /#[^\n]*/
 _NEWLINE: ( /(\r?\n[\t ]*)+/ | COMMENT )+
 

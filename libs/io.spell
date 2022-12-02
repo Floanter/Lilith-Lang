@@ -1,20 +1,8 @@
-BOX io
-    template < PrintType >
-        function print(valueToPrint: PrintType&): void 
-            std::cout << valueToPrint;
+macro type_finder(type)
+    _Generic((type), char: "%c", int: "%d", float: "%f", char*: "%s");
 
-    template < PrintlnType >
-        function println(valueToPrint: PrintlnType&): void
-            std::cout << valueToPrint << "\n";
+macro print(value)
+    printf(type_finder(value), value);
 
-    template < InputType >
-        function input(variableToAddInput: InputType&): void
-            std::cin >> variableToAddInput;
-    
-    template < ErrorType >
-        function error(errorToShow: ErrorType&): void
-            std::cerr << errorToShow;
-
-    template < LogType > 
-        function log(valueForLog: LogType&): void
-            std::clog << valueForLog;
+macro input(value)
+    scanf(type_finder(value), &value);

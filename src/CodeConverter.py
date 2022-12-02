@@ -5,6 +5,8 @@ class CodeConverter():
     def __init__(self):
         self.file = ''
 
+        self.spellsToAdd = []
+
         self.mainFunctionExists = False
 
         self.parser = LilithParser()
@@ -57,7 +59,11 @@ class CodeConverter():
             'switch': self._switch,
             'while': self._while,
             'do_while': self._do_while,
-            'for': self._for
+            'for': self._for,
+            'interface': self._interface,
+            'newtype': self._newtype,
+            'macro': self._macro,
+            'lib_spell': self._lib_spell
         }
 
         self._variable_commands = {
@@ -68,6 +74,25 @@ class CodeConverter():
             'array_values': self._array_values,
             'operator': self._value,
             'assignment': self._value
+        }
+
+        self._interface_commands = {
+            'identifier': self._value,
+            'property': self._property
+        }
+
+        self._macro_commands = {
+            'identifier': self._value,
+            'value': self._value,
+            'macro_parameter': self._macro_parameter,
+            'block': self._macro_block
+        }
+
+        self._property_commands = {
+            'identifier': self._value,
+            'type': self._value,
+            'array_size': self._value,
+            'parameters': self._parameters,
         }
 
         self._function_commands = {
@@ -113,18 +138,29 @@ class CodeConverter():
             'block': self._block
         }
 
+        self._newtype_commands = {
+            'type': self._value,
+            'identifier': self._value
+        }
+
         self._value_command = {
             'value': self._value,
             'identifier': self._value,
             'operator': self._value,
-            'call': self._call
+            'call': self._call,
+            'key_value': self._key_value,
+            'type_cast': self._type_cast
         }
 
     def run(self, tokens):
-        self.file += self.templates.requiredImports()
-        self.file += self._file(tokens)
+        self.file += self.templates.requiredImports()       
+        tmpFile = self._file(tokens)
         if self.mainFunctionExists:
-            self.file += self.templates.cMain()
+            tmpFile += self.templates.cMain()
+        if self.spellsToAdd:
+            for spell in self.spellsToAdd:
+                self.file += spell
+        self.file += tmpFile
         #print(self.file)
 
     def _file(self, blocks):
@@ -150,14 +186,93 @@ class CodeConverter():
     #                           IMPORT                             #
     ################################################################
     ################################################################
-    
+    def _lib_spell(self, tokens):
+        for t in tokens.children:
+            if t.data == 'identifier':
+                
+        return ''
     ################################################################
     ################################################################
     #                           IMPORT                             #
     ################################################################
     ################################################################
 
+    ################################################################
+    ################################################################
+    #                        STRUCTURE                             #
+    ################################################################
+    ################################################################
+    def _interface(self, tokens):
+        i = {
+            'identifier': '',
+            'property': ''
+        }
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype in self._interface_commands:
+                i[tokentype] += self._interface_commands[tokentype](token)
+        return self.templates.structure(i)
 
+    def _property(self, tokens):
+        p = {
+            'identifier': '',
+            'type': '',
+            'array_size': '',
+            'parameters': ''
+        }
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype in self._property_commands:
+                p[tokentype] += self._property_commands[tokentype](token)
+        return self.templates.propertyt(p)
+    ################################################################
+    ################################################################
+    #                        STRUCTURE                             #
+    ################################################################
+    ################################################################
+
+    ################################################################
+    ################################################################
+    #                            MACRO                             #
+    ################################################################
+    ################################################################
+    def _macro(self, tokens):
+        macro = {
+            'identifier': '',
+            'value': '',
+            'macro_parameter': '',
+            'block': ''
+        }
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype in self._macro_commands:
+                macro[tokentype] += self._macro_commands[tokentype](token)
+        return self.templates.macro(macro)
+
+    def _macro_block(self, tokens):
+        b = self._block(tokens).replace(";", "").replace("\n", "")
+        return f' \\\n{b}'
+
+    def _macro_parameter(self, tokens):
+        parameters = ''
+        count = 0
+        for token in tokens.children:
+            tokentype = token.data
+            #print(tokentype)
+            if tokentype == 'identifier':
+                if count > 0:
+                    parameters += ', '
+                parameters += self._value(token)
+                count += 1
+        return parameters
+    ################################################################
+    ################################################################
+    #                            MACRO                             #
+    ################################################################
+    ################################################################
 
     ################################################################
     ################################################################
@@ -405,6 +520,18 @@ class CodeConverter():
     #                           VALUES                             #
     ################################################################
     ################################################################
+    def _newtype(self, tokens):
+        nt = {
+            'identifier': '',
+            'type': ''
+        }
+        for t in tokens.children:
+            tokentype = t.data
+            #print(tokentype)
+            if tokentype in self._newtype_commands:
+                nt[tokentype] += self._newtype_commands[tokentype](t)
+        return self.templates.typedef(nt)
+
     def _return(self, tokens):
         ret = 'return '
         options = ['value', 'operator']
@@ -419,7 +546,7 @@ class CodeConverter():
     def _call_params(self, tokens):
         params = []
         for t in tokens.children:
-            params.append(self._value(t))
+            params.append(self._value(t).replace(';', '').replace('\n', ''))
         return self.templates.parameters(params)
 
     def _array_values(self, tokens):
@@ -433,6 +560,21 @@ class CodeConverter():
                 values.append(self._array_values(t))
 
         return self.templates.array_values(values)
+
+    def _key_value(self, tokens):
+        kv = []
+        for t in tokens.children:
+            if t.data == 'value':
+                kv.append(self._value(t))
+        return f'{kv[0]} : {kv[1]}'
+
+    def _type_cast(self, tokens):
+        ty = '('
+        for t in tokens.children:
+            if t.data == 'type':
+                ty += self._value(t)
+        ty += ')'
+        return ty
 
     def _parameters(self, tokens):
         params = []

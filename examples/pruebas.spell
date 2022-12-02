@@ -1,6 +1,1 @@
-function other (): void
-    let x: int = 10;
-
-    let i: int;  
-    for i = 0; i <= x; i++;
-        i++;
+use io;
