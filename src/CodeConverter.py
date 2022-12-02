@@ -12,6 +12,10 @@ class CodeConverter():
         self.parser = LilithParser()
         self.templates = Template()
 
+        self.libs = {
+            'io': 'libs/io.spell'
+        }
+
         self.operators = {
             'equal':            ' = ',
             "plus":             ' + ',
@@ -187,9 +191,28 @@ class CodeConverter():
     ################################################################
     ################################################################
     def _lib_spell(self, tokens):
+        name = ''
         for t in tokens.children:
             if t.data == 'identifier':
-                
+                name += self._value(t)
+        if name in self.libs:
+            with open(self.libs[name], "r") as l:
+                tks = self.parser.parse(l.read())
+                l.close()
+                f = self._file(tks)
+                if f not in self.spellsToAdd:
+                    self.spellsToAdd.append(f)
+        return ''
+    def _local_spell(self, tokens):
+        name = ''
+        for t in tokens.children:
+            name += self._value(t)
+        with open(name, "r") as l:
+            tks = self.parser.parse(l.read())
+            l.close()
+            f = self._file(tks)
+            if f not in self.spellsToAdd:
+                self.spellsToAdd.append(f)
         return ''
     ################################################################
     ################################################################
