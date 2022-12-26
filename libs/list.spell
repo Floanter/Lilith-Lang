@@ -1,0 +1,30 @@
+macro LIST_INIT_CAPACITY 4;
+
+struct List
+    **items: void;
+    capacity: int;
+    lenght: int;
+
+list_init = (l: List*): void ->
+    l->capacity = LIST_INIT_CAPACITY;
+    l->lenght = 0;
+    l->items = malloc(sizeof(void*) * l->capacity);
+
+list_free = (l: List*): void ->
+    free(l->items);
+
+list_lenght = (l: List*): int ->
+    return l->lenght;
+
+list_resize = (l: List*, capacity: int): static void ->
+    items: void* = realloc(l->items, sizeof(void*) * capacity);
+    
+    if items
+        l->items = items;
+        l->capacity = capacity;
+
+list_push = (l: List*, item: void*): void ->
+    if l->capacity == l->lenght
+        list_resize(l, l->capacity * 2);
+        
+    l->items[l->lenght++] = item;

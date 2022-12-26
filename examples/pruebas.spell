@@ -1,2 +1,16 @@
-use io;
+#Soy un comentario
 
+# Como se crea una funcion.
+main = (): void -> 
+    pass;
+
+# Como se crean las variables.
+numeros: int = 10;
+nombre: char[] = "Jhon Doe";
+
+
+# Ejemplo.
+suma = (x: int, y: int): int ->
+    return x + y;
+
+resultado: int = suma(10, 20);

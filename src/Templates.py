@@ -63,8 +63,8 @@ class Template:
 
     def function(self, fn):
         if fn["block"] == '':
-            return f'{fn["type"]} {fn["identifier"]}({fn["parameters"]});\n'
-        return f'{fn["type"]} {fn["identifier"]}({fn["parameters"]})\n{{\n{fn["block"]}}}\n'
+            return f'{fn["special_word"]}{fn["type"]} {fn["identifier"]}({fn["parameters"]});\n'
+        return f'{fn["special_word"]}{fn["type"]} {fn["identifier"]}({fn["parameters"]})\n{{\n{fn["block"]}}}\n'
 
     def call(self, c):
         return f'{c["identifier"]}({c["call_params"]});\n'
@@ -133,7 +133,8 @@ class Template:
     ################################################################
 
     def variable(self, var):
-        return f'{var["special_word"]}{var["type"]} {var["identifier"]}{var["array_size"]}{var["assignment"]}{var["value"]};\n'
+        value = var["value"].replace('\n', '').replace(';', '')
+        return f'{var["special_word"]}{var["type"]} {var["identifier"]}{var["array_size"]}{var["assignment"]}{value};\n'
 
     ################################################################
     ################################################################

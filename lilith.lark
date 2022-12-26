@@ -24,7 +24,7 @@ macro                       : "macro" identifier value ";" end_block
 
 macro_parameter             : identifier
 
-interface                   : "interface" identifier newline+ indent property (newline property)* end_block
+interface                   : "struct" identifier newline+ indent property (newline property)* end_block
 
 property                    : identifier ":" type array_size* ";"
                             | identifier "(" parameters ")" ":" type array_size* ";"
@@ -62,10 +62,10 @@ compare_op                  : "==" -> equal_to
 call                        : identifier "(" call_params ")"
                             | identifier "!"
 
-call_params                 : call_param (("," | newline) call_param)*
-call_param                  : type_cast | value | operator | array_values | key_value
+call_params                 : call_param ("," call_param)*
+call_param                  : (type_cast | value | operator | array_values | key_value)+
 
-function                    : "function" identifier "(" parameters? ")" ":" type array_size* newline+ indent block+ end_block
+function                    : identifier "=" "(" parameters? ")" ":" special_word* type array_size* "->" newline+ indent block+ end_block
 
 parameters                  : parameter ("," parameter)*
 
@@ -74,14 +74,13 @@ parameter                   : identifier ":" type array_size*
 variable                    : identifier assignment
                             | identifier array_size+ assignment (newline indent)? (value | operator | array_values)+
                             | identifier assignment (newline indent)? (value | operator | array_values)+
-                            | special_word+ identifier ":" type 
-                            | special_word+ identifier ":" type array_size+
-                            | special_word+ identifier ":" type assignment (newline indent)? (value | operator)+
-                            | special_word+ identifier ":" type array_size+ assignment (newline indent)? (value | operator | array_values)+
+                            | special_word* identifier ":" type 
+                            | special_word* identifier ":" type array_size+
+                            | special_word* identifier ":" type assignment (newline indent)? (value | operator)+
+                            | special_word* identifier ":" type array_size+ assignment (newline indent)? (value | operator | array_values)+
 
 special_word                : "const"   -> const
                             | "static"  -> static
-                            | "let"     -> ignore
 
 array_values                : "[" (value | array_values | operator) (("," | newline) (value | array_values | operator))* "]" 
 
@@ -115,8 +114,6 @@ operators                   : "+"   -> plus
                             | "%="  -> percent_equal
                             | "|="  -> or_equal
                             | "^="  -> power_equal
-                            | "("   -> left_parent
-                            | ")"   -> right_parent
 
 array_size                  : "[" (value | operator)* "]"
 

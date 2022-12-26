@@ -314,6 +314,7 @@ class CodeConverter():
 
     def _function(self, tokens):
         function = {
+            'special_word': '',
             'type': '',
             'identifier': '',
             'parameters': '',
@@ -322,6 +323,8 @@ class CodeConverter():
         for token in tokens.children:
             tokentype = token.data
             #print(tokentype)
+            if tokentype in self.special_word:
+                function['special_word'] += self.special_word[tokentype]
             if tokentype in self._function_commands:
                 if tokentype == 'identifier':
                     tempIdentifier = self._function_commands[tokentype](token)
@@ -519,14 +522,14 @@ class CodeConverter():
         }
         for token in tokens.children:
             tokentype = token.data
-            #print(tokentype)
+            print(tokentype)
             if tokentype in self._variable_commands:
                 if tokentype == 'array_values' or tokentype == 'operator':
                     variable['value'] += self._variable_commands[tokentype](token)
                 elif tokentype == 'array_size':
-                    variable['value'] += '['
-                    variable['value'] += self._variable_commands[tokentype](token)
-                    variable['value'] += ']'
+                    variable['identifier'] += '['
+                    variable['identifier'] += self._variable_commands[tokentype](token)
+                    variable['identifier'] += ']'
                 else:
                     variable[tokentype] += self._variable_commands[tokentype](token)
             if tokentype in self.special_word:
